@@ -1,0 +1,53 @@
+name: Publish catalogue
+
+# After a merge to main: builds the zips, catalogue.json, its signature and the web page onto the `catalogue` branch,
+# which Plesk Git deploys to plugins.gaiacp.digital. Versions already on that branch are kept as they are.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-catalogue
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out the published catalogue
+        run: |
+          if git ls-remote --exit-code --heads origin catalogue >/dev/null; then
+            git fetch origin catalogue
+            git worktree add site origin/catalogue
+          else
+            git worktree add --detach site
+            git -C site checkout --orphan catalogue
+            git -C site rm -rf --quiet .
+          fi
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: zip, sodium
+          tools: none
+
+      - name: Build and sign
+        env:
+          CATALOGUE_SIGNING_KEY: ${{ secrets.CATALOGUE_SIGNING_KEY }}
+        run: php bin/catalogue build --out=site
+
+      - name: Push to the catalogue branch
+        working-directory: site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "Nothing new to publish."; exit 0; fi
+          git commit -m "Catalogue from ${GITHUB_SHA::7}"
+          git push origin HEAD:catalogue
