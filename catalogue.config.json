@@ -1,0 +1,11 @@
+{
+    "base_url": "https://plugins.gaiacp.digital",
+    "repository": "https://github.com/tetterip/gaiacp-plugins",
+    "official": ["HelloWorld"],
+    "bundled": [
+        "Aade", "BankTransfer", "BetterStack", "Blacklists", "Cpanel", "DirectAdmin", "Discord", "EasyGr", "EmailRegistrar",
+        "Enom", "FlatTheme", "GaiaTheme", "GoGetSsl", "GoogleLogin", "Hestia", "HetrixTools", "Plesk", "Recaptcha",
+        "SiteChecks", "Slack", "Stripe", "Telegram", "TicketMail", "Turnstile", "UptimeKuma", "UptimeRobot", "Vies",
+        "Webhooks", "WhmcsImport"
+    ]
+}

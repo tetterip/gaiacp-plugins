@@ -1,0 +1,13 @@
+{
+    "version": "1.0.0",
+    "requires": "0.1.0",
+    "class": "Plugins\\HelloWorld\\HelloWorldPlugin",
+    "name": "Hello World",
+    "description": {
+        "en": "An example plugin: it adds nothing, it shows how a catalogue plugin is made.",
+        "el": "Παράδειγμα plugin: δεν προσθέτει τίποτα, δείχνει πώς φτιάχνεται ένα plugin του καταλόγου."
+    },
+    "category": "Integrations",
+    "author": {"name": "GaiaCP", "url": "https://gaiacp.digital"},
+    "licence": "GPL-3.0-or-later"
+}

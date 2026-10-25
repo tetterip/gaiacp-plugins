@@ -1,0 +1,495 @@
+#!/usr/bin/env php
+<?php
+
+/*
+ * The GaiaCP plugin catalogue builder. Plain PHP 8.3 with the zip and sodium extensions, nothing to install.
+ *
+ *   php bin/catalogue keygen                         a new signing key pair (run once, on your own computer)
+ *   php bin/catalogue check [Folder ...]             the checks a pull request must pass (all plugins by default)
+ *   php bin/catalogue build --out=site               zips, catalogue.json, its signature and the web pages
+ *
+ * build signs with the secret key in the CATALOGUE_SIGNING_KEY environment variable (base64, from keygen). It reads
+ * the catalogue already in --out, so versions published before stay listed and their zips are never rebuilt: a
+ * version is published once, and changing a plugin means a new version. The format is described in GaiaCP's
+ * docs/plugin-catalogue.md.
+ */
+
+const MAX_FILES = 2000;
+const MAX_BYTES = 50 * 1024 * 1024;
+const MAX_ZIP_BYTES = 10 * 1024 * 1024; // GaiaCP's gaiacp.plugins.max_upload_kb default
+const CATEGORIES = ['Servers', 'Registrars', 'Payments', 'Monitoring', 'Integrations', 'Themes'];
+const ROOT = __DIR__.'/..';
+
+final class Problem extends RuntimeException {}
+
+exit(main(array_slice($argv, 1)));
+
+function main(array $args): int
+{
+    foreach (['zip', 'sodium'] as $extension) {
+        if (! extension_loaded($extension)) {
+            fwrite(STDERR, "PHP needs the {$extension} extension.\n");
+
+            return 1;
+        }
+    }
+
+    $command = array_shift($args) ?? 'help';
+    $options = [];
+    $rest = [];
+    foreach ($args as $arg) {
+        if (preg_match('/^--([a-z-]+)=(.*)$/', $arg, $match)) {
+            $options[$match[1]] = $match[2];
+        } else {
+            $rest[] = $arg;
+        }
+    }
+
+    try {
+        return match ($command) {
+            'keygen' => keygen(),
+            'check' => check($rest),
+            'build' => build($options['out'] ?? 'site', $options['base-url'] ?? config()['base_url']),
+            default => help(),
+        };
+    } catch (Problem $e) {
+        fwrite(STDERR, $e->getMessage()."\n");
+
+        return 1;
+    }
+}
+
+function help(): int
+{
+    echo "Usage: php bin/catalogue keygen | check [Folder ...] | build [--out=site] [--base-url=https://...]\n";
+
+    return 1;
+}
+
+function keygen(): int
+{
+    $pair = sodium_crypto_sign_keypair();
+
+    echo "Public key (goes into GaiaCP's config/gaiacp.php, plugins.catalogue.keys):\n\n    ".base64_encode(sodium_crypto_sign_publickey($pair))."\n\n";
+    echo "Secret key (GitHub: this repository → Settings → Secrets and variables → Actions → New secret\n";
+    echo "named CATALOGUE_SIGNING_KEY; keep it nowhere else, never commit it, never paste it in a chat):\n\n    ".base64_encode(sodium_crypto_sign_secretkey($pair))."\n";
+
+    return 0;
+}
+
+/** @return array{base_url: string, repository: string, official: list<string>, bundled: list<string>} */
+function config(): array
+{
+    static $config;
+
+    return $config ??= json_decode((string) file_get_contents(ROOT.'/catalogue.config.json'), true, flags: JSON_THROW_ON_ERROR);
+}
+
+/** @return list<string> the plugin folders in plugins/ */
+function folders(): array
+{
+    $folders = array_map('basename', glob(ROOT.'/plugins/*', GLOB_ONLYDIR) ?: []);
+    sort($folders);
+
+    return $folders;
+}
+
+function check(array $only): int
+{
+    $folders = $only !== [] ? $only : folders();
+    $failed = 0;
+
+    foreach ($folders as $folder) {
+        try {
+            $plugin = inspect($folder);
+            echo "✓ {$folder} {$plugin['version']}\n";
+        } catch (Problem $e) {
+            echo "✗ {$folder}: {$e->getMessage()}\n";
+            $failed++;
+        }
+    }
+
+    // the same folder name in two cases would be two plugins to GitHub but one folder on a case-insensitive disk
+    $lower = array_count_values(array_map('strtolower', folders()));
+    foreach (array_keys(array_filter($lower, fn (int $count) => $count > 1)) as $name) {
+        echo "✗ two folders are named {$name} in different cases\n";
+        $failed++;
+    }
+
+    return $failed === 0 ? 0 : 1;
+}
+
+/**
+ * The checks GaiaCP's PluginInstaller makes on an uploaded zip, plus what the catalogue needs to list the plugin.
+ *
+ * @return array<string, mixed> the plugin's listing (no versions yet) and its version, files and source hash
+ */
+function inspect(string $folder): array
+{
+    $path = ROOT.'/plugins/'.$folder;
+    if (! preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $folder) || ! is_dir($path)) {
+        throw new Problem('the folder name must be letters, digits or _ (it is the PHP namespace)');
+    }
+
+    if (in_array(strtolower($folder), array_map('strtolower', config()['bundled']), true)) {
+        throw new Problem('a plugin bundled with GaiaCP has this name');
+    }
+
+    $files = files($path);
+    if (count($files) > MAX_FILES) {
+        throw new Problem('more than '.MAX_FILES.' files');
+    }
+
+    $bytes = array_sum(array_map(fn (string $file) => filesize($path.'/'.$file), $files));
+    if ($bytes > MAX_BYTES) {
+        throw new Problem('more than '.(MAX_BYTES / 1024 / 1024).' MB');
+    }
+
+    $manifest = json_decode((string) @file_get_contents($path.'/plugin.json'), true);
+    if (! is_array($manifest)) {
+        throw new Problem('plugin.json is missing or not valid JSON');
+    }
+
+    $version = (string) ($manifest['version'] ?? '');
+    if (! preg_match('/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/', $version)) {
+        throw new Problem('plugin.json needs a "version" like 1.0.0');
+    }
+
+    $requires = (string) ($manifest['requires'] ?? '');
+    if (! preg_match('/^\d+\.\d+\.\d+$/', $requires)) {
+        throw new Problem('plugin.json needs "requires": the oldest GaiaCP it runs on, like 0.1.0');
+    }
+
+    $class = ltrim((string) ($manifest['class'] ?? "Plugins\\{$folder}\\{$folder}Plugin"), '\\');
+    if (! preg_match('/^Plugins\\\\'.preg_quote($folder, '/').'\\\\([A-Za-z_][A-Za-z0-9_]*)$/', $class, $match) || ! in_array($match[1].'.php', $files, true)) {
+        throw new Problem("plugin.json's class must be Plugins\\{$folder}\\<Class>, in <Class>.php at the top of the folder");
+    }
+
+    $name = trim((string) ($manifest['name'] ?? ''));
+    $description = is_array($manifest['description'] ?? null) ? $manifest['description'] : ['en' => (string) ($manifest['description'] ?? '')];
+    $description = array_filter(array_map(fn ($text) => trim((string) $text), $description), fn (string $text) => $text !== '');
+    if ($name === '' || ! isset($description['en'])) {
+        throw new Problem('plugin.json needs "name" and "description" (a text, or {"en": ..., "el": ...})');
+    }
+
+    $category = (string) ($manifest['category'] ?? '');
+    if (! in_array($category, CATEGORIES, true)) {
+        throw new Problem('plugin.json needs "category": one of '.implode(', ', CATEGORIES));
+    }
+
+    $author = is_array($manifest['author'] ?? null) ? $manifest['author'] : ['name' => (string) ($manifest['author'] ?? '')];
+    if (trim((string) ($author['name'] ?? '')) === '') {
+        throw new Problem('plugin.json needs "author": {"name": ..., "url": ...}');
+    }
+
+    if (trim((string) ($manifest['licence'] ?? '')) === '') {
+        throw new Problem('plugin.json needs "licence", e.g. GPL-3.0-or-later');
+    }
+
+    $changelog = changelog($path, $version);
+    if ($changelog === null) {
+        throw new Problem("CHANGELOG.md needs a \"## [{$version}] - YYYY-MM-DD\" section");
+    }
+
+    foreach ($files as $file) {
+        if (strtolower(pathinfo($file, PATHINFO_EXTENSION)) !== 'php') {
+            continue;
+        }
+
+        try {
+            token_get_all((string) file_get_contents($path.'/'.$file), TOKEN_PARSE);
+        } catch (ParseError $e) {
+            throw new Problem("{$file} has a PHP error on line {$e->getLine()}: {$e->getMessage()}");
+        }
+    }
+
+    $hash = hash_init('sha256');
+    foreach ($files as $file) {
+        hash_update($hash, $file."\0".hash_file('sha256', $path.'/'.$file)."\n");
+    }
+
+    return [
+        'folder' => $folder,
+        'class' => $class,
+        'name' => $name,
+        'description' => $description,
+        'category' => $category,
+        'author' => array_filter(['name' => trim((string) $author['name']), 'url' => link_or_null($author['url'] ?? null)]),
+        'homepage' => link_or_null($manifest['homepage'] ?? null),
+        'licence' => trim((string) $manifest['licence']),
+        'official' => in_array($folder, config()['official'], true),
+        'version' => $version,
+        'requires' => $requires,
+        'php' => isset($manifest['php']) ? (string) $manifest['php'] : null,
+        'changelog' => $changelog,
+        'files' => $files,
+        'source' => hash_final($hash),
+    ];
+}
+
+/** @return list<string> the folder's files, relative, sorted; dot files left out; a symbolic link refused */
+function files(string $path): array
+{
+    $files = [];
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::SELF_FIRST);
+
+    foreach ($iterator as $file) {
+        $relative = substr($file->getPathname(), strlen($path) + 1);
+
+        if ($file->isLink()) {
+            throw new Problem("{$relative} is a symbolic link, which plugins can't contain");
+        }
+
+        if (preg_match('#(^|/)\.#', $relative) || $file->isDir()) {
+            continue;
+        }
+
+        $files[] = str_replace('\\', '/', $relative);
+    }
+
+    sort($files);
+
+    return $files;
+}
+
+/** The CHANGELOG.md section of one version, without its heading, or null when there is none. */
+function changelog(string $path, string $version): ?string
+{
+    $text = (string) @file_get_contents($path.'/CHANGELOG.md');
+
+    if (! preg_match('/^## \[?'.preg_quote($version, '/').'\]?[^\n]*\n(.*?)(?=^## |\z)/ms', $text, $match)) {
+        return null;
+    }
+
+    return trim($match[1]);
+}
+
+function link_or_null(mixed $url): ?string
+{
+    return is_string($url) && preg_match('#^https?://#i', $url) ? $url : null;
+}
+
+function build(string $out, string $baseUrl): int
+{
+    $secret = base64_decode((string) getenv('CATALOGUE_SIGNING_KEY'), true);
+    if (! is_string($secret) || strlen($secret) !== SODIUM_CRYPTO_SIGN_SECRETKEYBYTES) {
+        throw new Problem('CATALOGUE_SIGNING_KEY is not set to a secret key from "php bin/catalogue keygen".');
+    }
+
+    if (check([]) !== 0) {
+        throw new Problem('Fix the plugins above first.');
+    }
+
+    @mkdir($out.'/zips', 0755, true);
+    $previous = is_file($out.'/catalogue.json') ? json_decode((string) file_get_contents($out.'/catalogue.json'), true) : null;
+    $published = [];
+    foreach ($previous['plugins'] ?? [] as $plugin) {
+        $published[$plugin['folder']] = $plugin;
+    }
+
+    $plugins = [];
+    foreach (folders() as $folder) {
+        $plugin = inspect($folder);
+        $versions = $published[$folder]['versions'] ?? [];
+        $same = array_values(array_filter($versions, fn (array $version) => $version['version'] === $plugin['version']));
+
+        if ($same !== []) {
+            if (($same[0]['source'] ?? null) !== $plugin['source']) {
+                throw new Problem("{$folder} {$plugin['version']} is already published and its files changed since: give it a new version.");
+            }
+        } else {
+            $versions[] = package($plugin, $out);
+            echo "+ {$folder} {$plugin['version']}\n";
+        }
+
+        usort($versions, fn (array $a, array $b) => version_compare($b['version'], $a['version']));
+
+        $plugins[] = [
+            ...array_filter(array_intersect_key($plugin, array_flip(['folder', 'class', 'name', 'description', 'category', 'author', 'homepage', 'licence', 'official'])), fn ($value) => $value !== null),
+            'versions' => $versions,
+        ];
+    }
+
+    $catalogue = ['format' => 1, 'generated_at' => gmdate('Y-m-d\TH:i:s\Z'), 'plugins' => $plugins];
+    $json = json_encode($catalogue, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)."\n";
+
+    file_put_contents($out.'/catalogue.json', $json);
+    file_put_contents($out.'/catalogue.json.sig', base64_encode(sodium_crypto_sign_detached($json, $secret))."\n");
+    file_put_contents($out.'/index.html', page($catalogue, $baseUrl));
+    file_put_contents($out.'/.htaccess', "Options -Indexes\nAddType application/json .json\nAddType text/plain .sig\n<Files \"catalogue.json*\">\n    Header set Cache-Control \"max-age=300\"\n</Files>\n");
+
+    echo 'Catalogue: '.count($plugins)." plugins, signed.\n";
+
+    return 0;
+}
+
+/** Zips one version into zips/<Folder>-<version>.zip (inside a <Folder>/ folder, as GaiaCP expects). */
+function package(array $plugin, string $out): array
+{
+    $name = "{$plugin['folder']}-{$plugin['version']}.zip";
+    $zipPath = $out.'/zips/'.$name;
+    if (is_file($zipPath)) {
+        throw new Problem("zips/{$name} is there but not in the catalogue: remove it by hand if it is a failed build.");
+    }
+
+    $zip = new ZipArchive;
+    $zip->open($zipPath, ZipArchive::CREATE | ZipArchive::EXCL);
+    foreach ($plugin['files'] as $file) {
+        $entry = $plugin['folder'].'/'.$file;
+        $zip->addFile(ROOT.'/plugins/'.$plugin['folder'].'/'.$file, $entry);
+        $zip->setMtimeName($entry, 315532800); // 1980-01-01: the same files make the same zip
+    }
+    $zip->close();
+
+    if (filesize($zipPath) > MAX_ZIP_BYTES) {
+        unlink($zipPath);
+        throw new Problem("{$name} is larger than ".(MAX_ZIP_BYTES / 1024 / 1024).' MB, which GaiaCP downloads at most.');
+    }
+
+    return array_filter([
+        'version' => $plugin['version'],
+        'requires' => $plugin['requires'],
+        'php' => $plugin['php'],
+        'released_at' => gmdate('Y-m-d\TH:i:s\Z'),
+        'url' => 'zips/'.$name,
+        'sha256' => hash_file('sha256', $zipPath),
+        'size' => filesize($zipPath),
+        'changelog' => $plugin['changelog'],
+        'source' => $plugin['source'],
+    ], fn ($value) => $value !== null);
+}
+
+function e(?string $text): string
+{
+    return htmlspecialchars((string) $text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+/** A changelog section as HTML: "- " lines become a list, the rest paragraphs. */
+function changelog_html(string $text): string
+{
+    $html = '';
+    $list = false;
+
+    foreach (preg_split('/\R/', $text) as $line) {
+        $line = trim($line);
+        $item = preg_match('/^[-*] (.*)$/', $line, $match);
+
+        if ($item && ! $list) {
+            $html .= '<ul>';
+            $list = true;
+        } elseif (! $item && $list) {
+            $html .= '</ul>';
+            $list = false;
+        }
+
+        if ($item) {
+            $html .= '<li>'.e($match[1]).'</li>';
+        } elseif ($line !== '') {
+            $html .= '<p>'.e(ltrim($line, '# ')).'</p>';
+        }
+    }
+
+    return $html.($list ? '</ul>' : '');
+}
+
+/** The public page: every plugin with its latest version, download, requirements and changelog, and a search box. */
+function page(array $catalogue, string $baseUrl): string
+{
+    $repository = config()['repository'];
+    $cards = '';
+
+    foreach ($catalogue['plugins'] as $plugin) {
+        $latest = $plugin['versions'][0];
+        $older = '';
+        foreach (array_slice($plugin['versions'], 1) as $version) {
+            $older .= '<li><a href="'.e($version['url']).'">'.e($version['version']).'</a> · GaiaCP '.e($version['requires']).'+</li>';
+        }
+
+        $author = isset($plugin['author']['url'])
+            ? '<a href="'.e($plugin['author']['url']).'" rel="nofollow">'.e($plugin['author']['name']).'</a>'
+            : e($plugin['author']['name']);
+        $search = strtolower(implode(' ', [$plugin['name'], $plugin['folder'], $plugin['category'], $plugin['author']['name'], ...array_values($plugin['description'])]));
+
+        $cards .= '<article class="card" id="'.e($plugin['folder']).'" data-search="'.e($search).'">'
+            .'<header><h2>'.e($plugin['name']).'</h2>'
+            .'<span class="badge '.($plugin['official'] ? 'official">Official' : 'community">Community').'</span></header>'
+            .'<p class="desc" lang="en">'.e($plugin['description']['en']).'</p>'
+            .(isset($plugin['description']['el']) ? '<p class="desc" lang="el">'.e($plugin['description']['el']).'</p>' : '')
+            .'<dl><dt>Version</dt><dd>'.e($latest['version']).'</dd><dt>Needs</dt><dd>GaiaCP '.e($latest['requires']).'+'.(isset($latest['php']) ? ', PHP '.e($latest['php']).'+' : '').'</dd>'
+            .'<dt>Category</dt><dd>'.e($plugin['category']).'</dd><dt>Author</dt><dd>'.$author.'</dd><dt>Licence</dt><dd>'.e($plugin['licence']).'</dd></dl>'
+            .'<details><summary>What\'s new in '.e($latest['version']).'</summary>'.changelog_html($latest['changelog'] ?? '')
+            .($older !== '' ? '<p class="older">Earlier versions</p><ul>'.$older.'</ul>' : '').'</details>'
+            .'<footer><a class="button" href="'.e($latest['url']).'" download>Download zip</a>'
+            .(isset($plugin['homepage']) ? '<a href="'.e($plugin['homepage']).'" rel="nofollow">Website</a>' : '')
+            .'<a href="'.e($repository.'/tree/main/plugins/'.$plugin['folder']).'">Source</a></footer>'
+            .'</article>';
+    }
+
+    $count = count($catalogue['plugins']);
+    $updated = e(substr($catalogue['generated_at'], 0, 10));
+
+    return <<<HTML
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GaiaCP plugins</title>
+<meta name="description" content="Plugins for GaiaCP, the open source hosting billing and provisioning panel: server panels, registrars, payments, monitoring and more.">
+<link rel="alternate" type="application/json" href="catalogue.json">
+<style>
+:root { --bg: #f6f8f8; --card: #fff; --text: #1d2626; --muted: #5d6b6b; --line: #dde4e4; --accent: #358c8c; --accent-text: #fff; --soft: #e3f1f1; color-scheme: light dark; }
+@media (prefers-color-scheme: dark) { :root { --bg: #111717; --card: #192121; --text: #e6eded; --muted: #9aaaaa; --line: #2a3535; --accent: #4fb0b0; --accent-text: #0b1212; --soft: #1f3333; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 32px 16px 48px; }
+h1 { margin: 0 0 4px; font-size: 28px; }
+.lead { margin: 0 0 20px; color: var(--muted); }
+.lead a, footer a, dd a { color: var(--accent); }
+input[type=search] { width: 100%; padding: 12px 14px; font: inherit; color: inherit; background: var(--card); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 20px; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.card header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+h2 { margin: 0; font-size: 18px; }
+.badge { font-size: 12px; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+.official { background: var(--accent); color: var(--accent-text); }
+.community { background: var(--soft); color: var(--text); }
+.desc { margin: 0; }
+.desc[lang=el] { color: var(--muted); font-size: 14px; }
+dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 0; font-size: 14px; }
+dt { color: var(--muted); }
+dd { margin: 0; }
+details { font-size: 14px; }
+summary { cursor: pointer; color: var(--muted); }
+details ul { margin: 6px 0; padding-left: 20px; }
+.older { margin: 8px 0 0; color: var(--muted); }
+.card footer { margin-top: auto; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.button { background: var(--accent); color: var(--accent-text) !important; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; }
+.empty { color: var(--muted); display: none; }
+.foot { margin-top: 32px; color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+<h1>GaiaCP plugins</h1>
+<p class="lead">{$count} plugins for GaiaCP. Install them from your panel under Settings → Plugins → Catalogue, or download the zip and upload it there.
+Every plugin here was reviewed before it was listed. <a href="{$repository}/blob/main/CONTRIBUTING.md">Submit yours</a>.</p>
+<input type="search" id="search" placeholder="Search plugins" aria-label="Search plugins">
+<div class="grid" id="plugins">{$cards}</div>
+<p class="empty" id="empty">No plugin matches.</p>
+<p class="foot">Updated {$updated} · <a href="catalogue.json">catalogue.json</a> · <a href="{$repository}">Source on GitHub</a></p>
+</main>
+<script>
+const search = document.getElementById('search'), cards = [...document.querySelectorAll('.card')], empty = document.getElementById('empty');
+search.addEventListener('input', () => {
+    const words = search.value.toLowerCase().split(/\s+/).filter(Boolean);
+    let shown = 0;
+    cards.forEach(card => { const hit = words.every(word => card.dataset.search.includes(word)); card.hidden = !hit; shown += hit; });
+    empty.style.display = shown ? 'none' : 'block';
+});
+</script>
+</body>
+</html>
+
+HTML;
+}
