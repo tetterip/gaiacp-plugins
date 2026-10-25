@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GaiaCP plugins</title>
+<meta name="description" content="Plugins for GaiaCP, the open source hosting billing and provisioning panel: server panels, registrars, payments, monitoring and more.">
+<link rel="alternate" type="application/json" href="catalogue.json">
+<style>
+:root { --bg: #f6f8f8; --card: #fff; --text: #1d2626; --muted: #5d6b6b; --line: #dde4e4; --accent: #358c8c; --accent-text: #fff; --soft: #e3f1f1; color-scheme: light dark; }
+@media (prefers-color-scheme: dark) { :root { --bg: #111717; --card: #192121; --text: #e6eded; --muted: #9aaaaa; --line: #2a3535; --accent: #4fb0b0; --accent-text: #0b1212; --soft: #1f3333; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 32px 16px 48px; }
+h1 { margin: 0 0 4px; font-size: 28px; }
+.lead { margin: 0 0 20px; color: var(--muted); }
+.lead a, footer a, dd a { color: var(--accent); }
+input[type=search] { width: 100%; padding: 12px 14px; font: inherit; color: inherit; background: var(--card); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 20px; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.card header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+h2 { margin: 0; font-size: 18px; }
+.badge { font-size: 12px; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+.official { background: var(--accent); color: var(--accent-text); }
+.community { background: var(--soft); color: var(--text); }
+.desc { margin: 0; }
+.desc[lang=el] { color: var(--muted); font-size: 14px; }
+dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 0; font-size: 14px; }
+dt { color: var(--muted); }
+dd { margin: 0; }
+details { font-size: 14px; }
+summary { cursor: pointer; color: var(--muted); }
+details ul { margin: 6px 0; padding-left: 20px; }
+.older { margin: 8px 0 0; color: var(--muted); }
+.card footer { margin-top: auto; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.button { background: var(--accent); color: var(--accent-text) !important; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; }
+.empty { color: var(--muted); display: none; }
+.foot { margin-top: 32px; color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+<h1>GaiaCP plugins</h1>
+<p class="lead">1 plugins for GaiaCP. Install them from your panel under Settings → Plugins → Catalogue, or download the zip and upload it there.
+Every plugin here was reviewed before it was listed. <a href="https://github.com/tetterip/gaiacp-plugins/blob/main/CONTRIBUTING.md">Submit yours</a>.</p>
+<input type="search" id="search" placeholder="Search plugins" aria-label="Search plugins">
+<div class="grid" id="plugins"><article class="card" id="HelloWorld" data-search="hello world helloworld integrations gaiacp an example plugin: it adds nothing, it shows how a catalogue plugin is made. Παράδειγμα plugin: δεν προσθέτει τίποτα, δείχνει πώς φτιάχνεται ένα plugin του καταλόγου."><header><h2>Hello World</h2><span class="badge official">Official</span></header><p class="desc" lang="en">An example plugin: it adds nothing, it shows how a catalogue plugin is made.</p><p class="desc" lang="el">Παράδειγμα plugin: δεν προσθέτει τίποτα, δείχνει πώς φτιάχνεται ένα plugin του καταλόγου.</p><dl><dt>Version</dt><dd>1.0.0</dd><dt>Needs</dt><dd>GaiaCP 0.1.0+</dd><dt>Category</dt><dd>Integrations</dd><dt>Author</dt><dd><a href="https://gaiacp.digital" rel="nofollow">GaiaCP</a></dd><dt>Licence</dt><dd>GPL-3.0-or-later</dd></dl><details><summary>What's new in 1.0.0</summary><ul><li>First version</li></ul></details><footer><a class="button" href="zips/HelloWorld-1.0.0.zip" download>Download zip</a><a href="https://github.com/tetterip/gaiacp-plugins/tree/main/plugins/HelloWorld">Source</a></footer></article></div>
+<p class="empty" id="empty">No plugin matches.</p>
+<p class="foot">Updated 2026-10-25 · <a href="catalogue.json">catalogue.json</a> · <a href="https://github.com/tetterip/gaiacp-plugins">Source on GitHub</a></p>
+</main>
+<script>
+const search = document.getElementById('search'), cards = [...document.querySelectorAll('.card')], empty = document.getElementById('empty');
+search.addEventListener('input', () => {
+    const words = search.value.toLowerCase().split(/\s+/).filter(Boolean);
+    let shown = 0;
+    cards.forEach(card => { const hit = words.every(word => card.dataset.search.includes(word)); card.hidden = !hit; shown += hit; });
+    empty.style.display = shown ? 'none' : 'block';
+});
+</script>
+</body>
+</html>

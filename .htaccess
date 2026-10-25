@@ -1,0 +1,6 @@
+Options -Indexes
+AddType application/json .json
+AddType text/plain .sig
+<Files "catalogue.json*">
+    Header set Cache-Control "max-age=300"
+</Files>
