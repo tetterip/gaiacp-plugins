@@ -426,8 +426,12 @@ function page(array $catalogue, string $baseUrl): string
     }
 
     $count = count($catalogue['plugins']);
+    $plural = $count === 1 ? 'plugin' : 'plugins';
     $updated = e(substr($catalogue['generated_at'], 0, 10));
+    $site = 'https://gaiacp.digital';
+    $docs = 'https://github.com/tetterip/GaiaCP/blob/main/docs';
 
+    // The same look as gaiacp.digital: light only, a ledger of hairline rules, serif headings, the Gaia theme colours.
     return <<<HTML
 <!doctype html>
 <html lang="en">
@@ -436,49 +440,123 @@ function page(array $catalogue, string $baseUrl): string
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GaiaCP plugins</title>
 <meta name="description" content="Plugins for GaiaCP, the open source hosting billing and provisioning panel: server panels, registrars, payments, monitoring and more.">
+<meta name="theme-color" content="#ffffff">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="{$site}/assets/img/mark.svg" type="image/svg+xml">
 <link rel="alternate" type="application/json" href="catalogue.json">
 <style>
-:root { --bg: #f6f8f8; --card: #fff; --text: #1d2626; --muted: #5d6b6b; --line: #dde4e4; --accent: #358c8c; --accent-text: #fff; --soft: #e3f1f1; color-scheme: light dark; }
-@media (prefers-color-scheme: dark) { :root { --bg: #111717; --card: #192121; --text: #e6eded; --muted: #9aaaaa; --line: #2a3535; --accent: #4fb0b0; --accent-text: #0b1212; --soft: #1f3333; } }
-* { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-.wrap { max-width: 1080px; margin: 0 auto; padding: 32px 16px 48px; }
-h1 { margin: 0 0 4px; font-size: 28px; }
-.lead { margin: 0 0 20px; color: var(--muted); }
-.lead a, footer a, dd a { color: var(--accent); }
-input[type=search] { width: 100%; padding: 12px 14px; font: inherit; color: inherit; background: var(--card); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 20px; }
-.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
-.card header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-h2 { margin: 0; font-size: 18px; }
-.badge { font-size: 12px; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
-.official { background: var(--accent); color: var(--accent-text); }
-.community { background: var(--soft); color: var(--text); }
-.desc { margin: 0; }
-.desc[lang=el] { color: var(--muted); font-size: 14px; }
-dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 0; font-size: 14px; }
-dt { color: var(--muted); }
-dd { margin: 0; }
-details { font-size: 14px; }
+:root {
+    --ink: #18181b; --ink-soft: #3f3f46; --muted: #5b5b63; --bg: #fff; --band: #f4f4f5; --soft: #f0f0f2;
+    --line: #e4e4e7; --rule: #18181b; --accent: #23696b; --accent-soft: #e6f0ef; --button: #16302c; --sun: #fcd557; --radius: 10px;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color-scheme: light;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; font: 17px/1.6 var(--sans); color: var(--ink); background: var(--bg); overflow-x: hidden; }
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { width: min(1160px, 100% - 32px); margin-inline: auto; }
+h1, h2 { font-family: var(--serif); font-weight: 600; line-height: 1.12; letter-spacing: -.015em; margin: 0; }
+h1 { font-size: clamp(2.3rem, 5.6vw, 3.6rem); margin-bottom: .4em; }
+h1 em { font-style: normal; padding-inline: .06em; background: linear-gradient(transparent 70%, color-mix(in srgb, var(--sun) 75%, transparent) 70%, color-mix(in srgb, var(--sun) 75%, transparent) 90%, transparent 90%); }
+.top { position: sticky; top: 0; z-index: 20; background: rgb(255 255 255 / .94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; gap: 20px; height: 64px; }
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--muted); font: 600 .78rem/1 var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+.brand img { height: 30px; width: auto; display: block; }
+.nav { margin-left: auto; display: flex; gap: 24px; }
+.nav a { color: var(--ink-soft); text-decoration: none; font-size: .95rem; }
+.nav a:hover { color: var(--ink); text-decoration: underline; }
+@media (max-width: 640px) { .nav .wide { display: none; } .nav { gap: 16px; } }
+.hero { padding: 64px 0 0; }
+.pill { font: 500 .82rem/1.4 var(--mono); color: var(--muted); margin: 0 0 20px; }
+.pill b { color: var(--accent); font-weight: 600; }
+.lead { font-size: clamp(1.05rem, 2vw, 1.2rem); color: var(--ink-soft); max-width: 40em; margin: 0; }
+.head { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--rule); display: flex; gap: 16px 32px; align-items: center; flex-wrap: wrap; }
+.eyebrow { font: 600 .78rem/1 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.eyebrow b { color: var(--accent); font-weight: 600; margin-right: .9em; }
+input[type=search] { flex: 1 1 280px; max-width: 420px; margin-left: auto; padding: 10px 14px; font: inherit; font-size: .97rem; color: inherit; background: #fff; border: 1px solid #d4d4d8; border-radius: var(--radius); }
+input[type=search]:focus { border-color: var(--ink); outline: none; }
+.grid { display: grid; gap: 16px; margin-top: 28px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+.card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column; gap: 12px; transition: border-color .15s ease; }
+.card:hover { border-color: #a1a1aa; }
+.card[hidden] { display: none; }
+.card header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.card h2 { font-size: 1.45rem; }
+.badge { font: 600 .7rem/1 var(--mono); text-transform: uppercase; letter-spacing: .08em; padding: 5px 8px; border-radius: 5px; white-space: nowrap; }
+.official { background: var(--accent-soft); color: var(--accent); }
+.community { background: var(--soft); color: var(--ink-soft); }
+.desc { margin: 0; color: var(--ink-soft); font-size: .97rem; }
+.desc[lang=el] { color: var(--muted); font-size: .9rem; }
+dl { display: grid; grid-template-columns: auto 1fr; gap: 0; margin: 4px 0 0; font-size: .9rem; border-top: 1px solid var(--line); }
+dt, dd { padding: 6px 0; border-bottom: 1px solid var(--line); }
+dt { padding-right: 16px; font: 600 .72rem/1.9 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+dd { margin: 0; color: var(--ink); }
+details { font-size: .9rem; color: var(--ink-soft); }
 summary { cursor: pointer; color: var(--muted); }
+summary:hover { color: var(--ink); }
 details ul { margin: 6px 0; padding-left: 20px; }
-.older { margin: 8px 0 0; color: var(--muted); }
-.card footer { margin-top: auto; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-.button { background: var(--accent); color: var(--accent-text) !important; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; }
-.empty { color: var(--muted); display: none; }
-.foot { margin-top: 32px; color: var(--muted); font-size: 14px; }
+details p { margin: 6px 0; }
+.older { color: var(--muted); }
+.card footer { margin-top: auto; padding-top: 6px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; font-size: .95rem; }
+.button { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 16px; border-radius: 8px; background: var(--button); color: #fff; font-weight: 600; text-decoration: none; transition: background .15s ease; }
+.button:hover { background: #0e211e; color: #fff; }
+.empty { color: var(--muted); margin-top: 28px; display: none; }
+.cta { margin-top: 72px; padding: 36px 40px; border-radius: 14px; background: var(--band); border: 1px solid var(--line); display: flex; gap: 16px 40px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.cta h2 { font-size: clamp(1.5rem, 3vw, 2rem); margin-bottom: .3em; }
+.cta p { margin: 0; color: var(--ink-soft); max-width: 36em; }
+.cta .button { min-height: 46px; padding: 10px 20px; }
+.foot { margin-top: 72px; padding-bottom: 40px; color: var(--muted); font-size: .92rem; }
+.foot .wrap { border-top: 1px solid var(--rule); padding-top: 24px; display: flex; gap: 8px 24px; flex-wrap: wrap; justify-content: space-between; }
+.foot a { color: var(--ink-soft); text-decoration: none; }
+.foot a:hover { color: var(--ink); text-decoration: underline; }
+@media (max-width: 560px) { body { font-size: 16px; } .hero { padding-top: 40px; } .card { padding: 20px; } .cta { padding: 28px 22px; } input[type=search] { max-width: none; margin-left: 0; } }
+@media (prefers-reduced-motion: reduce) { .card, .button { transition: none; } }
 </style>
 </head>
 <body>
-<main class="wrap">
-<h1>GaiaCP plugins</h1>
-<p class="lead">{$count} plugins for GaiaCP. Install them from your panel under Settings → Plugins → Catalogue, or download the zip and upload it there.
-Every plugin here was reviewed before it was listed. <a href="{$repository}/blob/main/CONTRIBUTING.md">Submit yours</a>.</p>
+<header class="top">
+<div class="wrap">
+<a class="brand" href="{$site}/" aria-label="GaiaCP home"><img src="{$site}/assets/img/logo.svg" alt="GaiaCP" width="120" height="30"></a>
+<nav class="nav" aria-label="Links">
+<a href="{$site}/">Home</a>
+<a class="wide" href="https://demo.gaiacp.digital/admin">Demo</a>
+<a class="wide" href="{$docs}/writing-plugins.md">Writing plugins</a>
+<a href="{$repository}">GitHub</a>
+</nav>
+</div>
+</header>
+<main>
+<section class="hero">
+<div class="wrap">
+<p class="pill"><b>Plugin catalogue</b> · {$count} {$plural} · signed</p>
+<h1>Plugins for <em>GaiaCP</em></h1>
+<p class="lead">Install them from your panel under Settings → Plugins → Catalogue, or download the zip and upload it there.
+Every plugin here was reviewed before it was listed.</p>
+<div class="head">
+<span class="eyebrow"><b>01</b>Catalogue</span>
 <input type="search" id="search" placeholder="Search plugins" aria-label="Search plugins">
+</div>
 <div class="grid" id="plugins">{$cards}</div>
 <p class="empty" id="empty">No plugin matches.</p>
-<p class="foot">Updated {$updated} · <a href="catalogue.json">catalogue.json</a> · <a href="{$repository}">Source on GitHub</a></p>
+<div class="cta">
+<div>
+<h2>Made a plugin?</h2>
+<p>Send it as a pull request. It is reviewed, then listed here and in every GaiaCP panel's catalogue.</p>
+</div>
+<a class="button" href="{$repository}/blob/main/CONTRIBUTING.md">Submit yours</a>
+</div>
+</div>
+</section>
 </main>
+<footer class="foot">
+<div class="wrap">
+<span>Updated {$updated} · <a href="catalogue.json">catalogue.json</a> · <a href="{$repository}">Source on GitHub</a></span>
+<span><a href="{$site}/">gaiacp.digital</a> · GPL-3.0-or-later</span>
+</div>
+</footer>
 <script>
 const search = document.getElementById('search'), cards = [...document.querySelectorAll('.card')], empty = document.getElementById('empty');
 search.addEventListener('input', () => {
