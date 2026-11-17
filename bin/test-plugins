@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Runs the plugins' tests inside a GaiaCP checkout: php bin/catalogue check only reads the files, this runs them.
+#
+#   bin/test-plugins <path to GaiaCP> [Folder ...]
+#
+# The GaiaCP checkout needs its composer packages installed. Each plugin folder (all of plugins/, or the ones named)
+# is copied into its plugins/ (replacing a copy already there) and each tests/<Folder>/ (plus tests/Shared/) into its
+# tests/Plugins/, then GaiaCP's test runner runs them, with GaiaCP's own LocalesTest (every text has its Greek) and
+# PluginApiTest (only classes GaiaCP lists for plugins). Copy into a throwaway checkout: the files stay there.
+set -euo pipefail
+
+root="$(cd "$(dirname "$0")/.." && pwd)"
+gaiacp="${1:?usage: bin/test-plugins <path to GaiaCP> [Folder ...]}"
+shift
+gaiacp="$(cd "$gaiacp" && pwd)"
+
+if [ ! -f "$gaiacp/artisan" ] || [ ! -d "$gaiacp/vendor" ]; then
+    echo "$gaiacp is not a GaiaCP checkout with composer install done" >&2
+    exit 1
+fi
+
+if [ $# -gt 0 ]; then
+    folders=("$@")
+else
+    folders=()
+    for dir in "$root"/plugins/*/; do
+        folders+=("$(basename "$dir")")
+    done
+fi
+
+mkdir -p "$gaiacp/tests/Plugins"
+
+for folder in "${folders[@]}"; do
+    [ -d "$root/plugins/$folder" ] || { echo "plugins/$folder does not exist" >&2; exit 1; }
+    rm -rf "${gaiacp:?}/plugins/$folder" "$gaiacp/tests/Plugins/$folder"
+    cp -R "$root/plugins/$folder" "$gaiacp/plugins/$folder"
+
+    if [ -d "$root/tests/$folder" ]; then
+        cp -R "$root/tests/$folder" "$gaiacp/tests/Plugins/$folder"
+    fi
+done
+
+if [ -d "$root/tests/Shared" ]; then
+    rm -rf "$gaiacp/tests/Plugins/Shared"
+    cp -R "$root/tests/Shared" "$gaiacp/tests/Plugins/Shared"
+fi
+
+cd "$gaiacp"
+
+[ -f .env ] || cp .env.example .env
+grep -q '^APP_KEY=.' .env || php artisan key:generate --no-interaction
+
+status=0
+if [ -n "$(find tests/Plugins -name '*Test.php' -print -quit)" ]; then
+    php artisan test tests/Plugins || status=1
+fi
+php artisan test --filter='LocalesTest|PluginApiTest' || status=1
+
+exit $status

@@ -1,0 +1,17 @@
+{
+    "version": "1.0.1",
+    "requires": "0.9.0",
+    "class": "Plugins\\PiraeusBank\\PiraeusBankPlugin",
+    "name": "Piraeus Bank",
+    "description": {
+        "en": "Clients pay their payment notices by card or IRIS in the client area, on Piraeus Bank's own page (epay paycenter).",
+        "el": "Οι πελάτες πληρώνουν τις ειδοποιήσεις πληρωμής τους με κάρτα ή IRIS στην περιοχή πελατών, στη σελίδα της Τράπεζας Πειραιώς (epay paycenter)."
+    },
+    "category": "Payments",
+    "author": {
+        "name": "GaiaCP",
+        "url": "https://gaiacp.digital"
+    },
+    "licence": "GPL-3.0-or-later",
+    "php": "8.3"
+}

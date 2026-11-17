@@ -33,6 +33,10 @@ Your plugin goes in `plugins/<Folder>/`, as GaiaCP loads it (see GaiaCP's `docs/
 
 Run `php bin/catalogue check MyPanel` before you open the pull request.
 
+Tests are welcome, and expected for anything that records payments: put them in `tests/MyPanel/` (namespace
+`Tests\Plugins\MyPanel`, extending GaiaCP's `Tests\TestCase`), never inside the plugin folder, which is what ships.
+`bin/test-plugins <GaiaCP checkout> MyPanel` runs them inside GaiaCP, as GitHub does on the pull request.
+
 ## 2. The pull request
 
 One plugin per pull request. A new version changes only that plugin's folder: bump `version`, add the CHANGELOG
