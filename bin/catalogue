@@ -17,7 +17,7 @@
 const MAX_FILES = 2000;
 const MAX_BYTES = 50 * 1024 * 1024;
 const MAX_ZIP_BYTES = 10 * 1024 * 1024; // GaiaCP's gaiacp.plugins.max_upload_kb default
-const CATEGORIES = ['Servers', 'Registrars', 'Payments', 'Monitoring', 'Integrations', 'Themes'];
+const CATEGORIES = ['Servers', 'Registrars', 'Payments', 'Monitoring', 'Integrations', 'AI', 'Themes'];
 const ROOT = __DIR__.'/..';
 
 final class Problem extends RuntimeException {}

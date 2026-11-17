@@ -1,0 +1,17 @@
+{
+    "version": "1.0.3",
+    "requires": "0.1.0",
+    "class": "Plugins\\Kimi\\KimiPlugin",
+    "name": "Kimi",
+    "description": {
+        "en": "Kimi, Moonshot AI's assistant, for the AI assistant: it improves and translates texts you write, with your own API key.",
+        "el": "Το Kimi, το AI της Moonshot AI, για τον βοηθό AI: βελτιώνει και μεταφράζει τα κείμενα που γράφεις, με δικό σου API key."
+    },
+    "category": "AI",
+    "author": {
+        "name": "GaiaCP",
+        "url": "https://gaiacp.digital"
+    },
+    "licence": "GPL-3.0-or-later",
+    "php": "8.3"
+}

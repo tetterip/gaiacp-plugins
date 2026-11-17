@@ -1,0 +1,17 @@
+{
+    "version": "1.0.1",
+    "requires": "0.3.1",
+    "class": "Plugins\\Ollama\\OllamaPlugin",
+    "name": "Ollama",
+    "description": {
+        "en": "Ollama for the AI assistant: an open model such as Llama, Qwen or Gemma on your own server or computer, so texts never leave your machines.",
+        "el": "Το Ollama για τον βοηθό AI: ένα ανοιχτό μοντέλο όπως Llama, Qwen ή Gemma στον δικό σου server ή υπολογιστή, ώστε τα κείμενα να μη φεύγουν ποτέ από τα μηχανήματά σου."
+    },
+    "category": "AI",
+    "author": {
+        "name": "GaiaCP",
+        "url": "https://gaiacp.digital"
+    },
+    "licence": "GPL-3.0-or-later",
+    "php": "8.3"
+}
