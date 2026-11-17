@@ -1,0 +1,17 @@
+{
+    "version": "1.0.1",
+    "requires": "0.9.0",
+    "class": "Plugins\\AlphaBank\\AlphaBankPlugin",
+    "name": "Alpha Bank",
+    "description": {
+        "en": "Clients pay their payment notices by card in the client area, on Alpha Bank's own page (Alpha e-Commerce, Cardlink).",
+        "el": "Οι πελάτες πληρώνουν τις ειδοποιήσεις πληρωμής τους με κάρτα στην περιοχή πελατών, στη σελίδα της Alpha Bank (Alpha e-Commerce, Cardlink)."
+    },
+    "category": "Payments",
+    "author": {
+        "name": "GaiaCP",
+        "url": "https://gaiacp.digital"
+    },
+    "licence": "GPL-3.0-or-later",
+    "php": "8.3"
+}

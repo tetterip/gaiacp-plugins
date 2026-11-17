@@ -9,6 +9,8 @@ under Settings → Plugins → Catalogue.
 - Each plugin is a folder in [`plugins/`](plugins), with its source code. Nothing is listed without being read first.
 - Authors send a new plugin, or a new version, as a pull request. GitHub runs `php bin/catalogue check`; a maintainer
   reviews the code and merges.
+- GitHub also runs the plugins' tests (`tests/<Folder>/`) inside the latest GaiaCP with `bin/test-plugins`, on every
+  pull request and each Monday, so a plugin that stops working with a newer GaiaCP shows up.
 - After a merge, [`publish.yml`](.github/workflows/publish.yml) builds the zips, `catalogue.json`, its Ed25519
   signature (`catalogue.json.sig`) and the web page onto the `catalogue` branch, which is what plugins.gaiacp.digital
   serves.
@@ -34,6 +36,14 @@ Plain PHP 8.3 with the `zip` and `sodium` extensions:
 php bin/catalogue check                         # the checks a pull request must pass
 php bin/catalogue keygen                        # a signing key pair, for a catalogue of your own
 CATALOGUE_SIGNING_KEY=... php bin/catalogue build --out=site --base-url=https://plugins.example.com
+```
+
+To run the plugins' tests, give `bin/test-plugins` a GaiaCP checkout you can throw away, with `composer install` done
+(it copies the plugins and their tests into it):
+
+```
+bin/test-plugins ../gaiacp-scratch            # every plugin
+bin/test-plugins ../gaiacp-scratch AlphaBank  # one
 ```
 
 A catalogue of your own works too: GaiaCP reads it with `GAIACP_PLUGIN_CATALOGUE_URL` and

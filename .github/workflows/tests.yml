@@ -1,0 +1,48 @@
+name: Test plugins
+
+# Runs every plugin's tests (tests/<Folder>/) inside the latest GaiaCP, plus GaiaCP's translation and plugin API checks,
+# so a plugin that stops working with GaiaCP shows up here. Mondays too: a change in GaiaCP can break a plugin that
+# did not change.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: PHP ${{ matrix.php }}, GaiaCP main
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.5']
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: catalogue
+
+      - uses: actions/checkout@v4
+        with:
+          repository: tetterip/GaiaCP
+          ref: main
+          path: gaiacp
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, pdo_sqlite, intl
+          coverage: none
+
+      - name: Install GaiaCP's packages
+        working-directory: gaiacp
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Tests
+        run: bash catalogue/bin/test-plugins gaiacp
