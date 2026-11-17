@@ -449,7 +449,7 @@ function page(array $catalogue, string $baseUrl): string
     foreach ($catalogue['plugins'] as $plugin) {
         $latest = $plugin['versions'][0];
         $tags = $plugin['tags'] ?? [];
-        $search = strtolower(implode(' ', [$plugin['name'], $plugin['folder'], $plugin['category'], $plugin['author']['name'], ...array_values($plugin['description']), ...array_map(fn (string $tag) => TAGS[$tag] ?? $tag, $tags)]));
+        $search = strtolower(implode(' ', [$plugin['name'], $plugin['folder'], $plugin['category'], $plugin['author']['name'], $plugin['description']['en'], ...array_map(fn (string $tag) => TAGS[$tag] ?? $tag, $tags)]));
         $chips = $tags === [] ? '' : '<p class="tags">'.implode('', array_map(fn (string $tag) => '<button type="button" class="tag" data-tag="'.e($tag).'">'.e(TAGS[$tag] ?? $tag).'</button>', $tags)).'</p>';
         $url = plugin_path($plugin);
 
@@ -457,7 +457,6 @@ function page(array $catalogue, string $baseUrl): string
             .'<header><h2><a href="'.e($url).'">'.e($plugin['name']).'</a></h2>'
             .official_badge($plugin).'</header>'
             .'<p class="desc" lang="en">'.e($plugin['description']['en']).'</p>'
-            .(isset($plugin['description']['el']) ? '<p class="desc" lang="el">'.e($plugin['description']['el']).'</p>' : '')
             .$chips
             .'<dl><dt>Version</dt><dd>'.e($latest['version']).'</dd><dt>Needs</dt><dd>'.needs($latest).'</dd>'
             .'<dt>Category</dt><dd>'.e($plugin['category']).'</dd><dt>Author</dt><dd>'.author($plugin).'</dd></dl>'
@@ -532,7 +531,7 @@ HTML;
     return layout('GaiaCP plugins', 'Plugins for GaiaCP, the open source hosting billing and provisioning panel: server panels, registrars, payments, monitoring and more.', '', $main, $catalogue['generated_at'], $script);
 }
 
-/** One plugin's own page (plugins/<Folder>/): both descriptions, tags, every version with its changelog and zip. */
+/** One plugin's own page (plugins/<Folder>/): its description, tags, every version with its changelog and zip. */
 function plugin_page(array $plugin, string $generatedAt): string
 {
     $repository = config()['repository'];
@@ -560,7 +559,6 @@ function plugin_page(array $plugin, string $generatedAt): string
     $folder = e($plugin['folder']);
     $badge = official_badge($plugin);
     $en = '<p class="lead" lang="en">'.e($plugin['description']['en']).'</p>';
-    $el = isset($plugin['description']['el']) ? '<p class="desc" lang="el">'.e($plugin['description']['el']).'</p>' : '';
     $download = e($zip($latest));
     $website = isset($plugin['homepage']) ? '<a href="'.e($plugin['homepage']).'" rel="nofollow">Website</a>' : '';
     $source = e($repository.'/tree/main/plugins/'.$plugin['folder']);
@@ -573,7 +571,6 @@ function plugin_page(array $plugin, string $generatedAt): string
 <p class="pill"><a href="{$root}">Plugin catalogue</a> · {$folder}</p>
 <div class="title"><h1>{$name}</h1>{$badge}</div>
 {$en}
-{$el}
 {$chips}
 {$community}
 <div class="detail">
@@ -666,7 +663,6 @@ input[type=search]:focus { border-color: var(--ink); outline: none; }
 .official { background: var(--accent-soft); color: var(--accent); }
 .community { background: var(--soft); color: var(--ink-soft); }
 .desc { margin: 0; color: var(--ink-soft); font-size: .97rem; }
-.desc[lang=el] { color: var(--muted); font-size: .9rem; }
 dl { display: grid; grid-template-columns: auto 1fr; gap: 0; margin: 4px 0 0; font-size: .9rem; border-top: 1px solid var(--line); }
 dt, dd { padding: 6px 0; border-bottom: 1px solid var(--line); }
 dt { padding-right: 16px; font: 600 .72rem/1.9 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
@@ -701,7 +697,6 @@ details p { margin: 6px 0; }
 a.tag { text-decoration: none; display: inline-block; }
 .title { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .title h1 { margin-bottom: .2em; }
-.hero .desc[lang=el] { margin-top: 12px; max-width: 40em; }
 .hero .tags { margin-top: 20px; }
 .note { margin: 20px 0 0; padding: 12px 16px; border-radius: var(--radius); background: #fff7e0; color: var(--ink-soft); font-size: .95rem; max-width: 46em; }
 .detail { display: grid; gap: 16px 48px; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); align-items: start; }
