@@ -1,7 +1,36 @@
 {
     "format": 1,
-    "generated_at": "2026-11-17T18:19:57Z",
+    "generated_at": "2026-11-17T19:09:35Z",
     "plugins": [
+        {
+            "folder": "Aade",
+            "class": "Plugins\\Aade\\AadePlugin",
+            "name": "ΑΑΔΕ",
+            "description": {
+                "en": "Fills in a client's name, Δ.Ο.Υ., profession and address from their ΑΦΜ.",
+                "el": "Συμπληρώνει την επωνυμία, τη Δ.Ο.Υ., το επάγγελμα και τη διεύθυνση ενός πελάτη από το ΑΦΜ του."
+            },
+            "category": "Integrations",
+            "author": {
+                "name": "GaiaCP",
+                "url": "https://gaiacp.digital"
+            },
+            "licence": "GPL-3.0-or-later",
+            "official": true,
+            "versions": [
+                {
+                    "version": "1.0.4",
+                    "requires": "0.1.0",
+                    "php": "8.3",
+                    "released_at": "2026-11-17T19:09:35Z",
+                    "url": "zips/Aade-1.0.4.zip",
+                    "sha256": "937abaf879a01683234c21d5ba65f0298c435fd29e48e7b8acba535db063c097",
+                    "size": 22111,
+                    "changelog": "- Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that\n  had it keeps it, with its settings and data, and updates it from the catalogue from now on. No change to how it\n  works.",
+                    "source": "24f5238636e0a80b51fcc6788df1f303c4f8267f298d90521b12bfc93ab5b256"
+                }
+            ]
+        },
         {
             "folder": "AlphaBank",
             "class": "Plugins\\AlphaBank\\AlphaBankPlugin",
@@ -32,6 +61,64 @@
             ]
         },
         {
+            "folder": "EasyGr",
+            "class": "Plugins\\EasyGr\\EasyGrPlugin",
+            "name": "easy.gr",
+            "description": {
+                "en": "Registers, renews, transfers and syncs domains through an easy.gr reseller account.",
+                "el": "Καταχωρεί, ανανεώνει, μεταφέρει και συγχρονίζει domains μέσω λογαριασμού μεταπωλητή easy.gr."
+            },
+            "category": "Registrars",
+            "author": {
+                "name": "GaiaCP",
+                "url": "https://gaiacp.digital"
+            },
+            "licence": "GPL-3.0-or-later",
+            "official": true,
+            "versions": [
+                {
+                    "version": "1.2.1",
+                    "requires": "0.1.0",
+                    "php": "8.3",
+                    "released_at": "2026-11-17T19:09:35Z",
+                    "url": "zips/EasyGr-1.2.1.zip",
+                    "sha256": "29583cce65bcf4db334ecabb8f0d43ead4f20ea693ee743d5dce2d67d43bb4ad",
+                    "size": 12212,
+                    "changelog": "- Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that\n  had it keeps it, with its settings and data, and updates it from the catalogue from now on. No change to how it\n  works.",
+                    "source": "34e3110a0d3adc4b271a955b5d93f02329c07efba6b92bd6cdef69dfab52e40d"
+                }
+            ]
+        },
+        {
+            "folder": "Enhance",
+            "class": "Plugins\\Enhance\\EnhancePlugin",
+            "name": "Enhance",
+            "description": {
+                "en": "Creates, suspends and removes hosting subscriptions on Enhance control panels.",
+                "el": "Δημιουργεί, αναστέλλει και διαγράφει συνδρομές φιλοξενίας σε control panels Enhance."
+            },
+            "category": "Servers",
+            "author": {
+                "name": "GaiaCP",
+                "url": "https://gaiacp.digital"
+            },
+            "licence": "GPL-3.0-or-later",
+            "official": true,
+            "versions": [
+                {
+                    "version": "1.1.1",
+                    "requires": "0.1.0",
+                    "php": "8.3",
+                    "released_at": "2026-11-17T19:09:35Z",
+                    "url": "zips/Enhance-1.1.1.zip",
+                    "sha256": "ca4729ef5e0d3e1007cce6bd74cfc4701460adb82e04559dd85d31b624149445",
+                    "size": 15423,
+                    "changelog": "- Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that\n  had it keeps it, with its settings and data, and updates it from the catalogue from now on. No change to how it\n  works.",
+                    "source": "c1ef09b1db0274456e89f4a86825cf19edcdd4627a2b3f825c9701224ccafcd8"
+                }
+            ]
+        },
+        {
             "folder": "Eurobank",
             "class": "Plugins\\Eurobank\\EurobankPlugin",
             "name": "Eurobank",
@@ -57,6 +144,35 @@
                     "size": 44597,
                     "changelog": "- Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that\n  had it keeps it, with its settings and payments, and updates it from the catalogue from now on. No change to\n  how it works.",
                     "source": "c6eb60f71d19a8b96462de3bb9ab51493cb05f57fb3d1511a2482f7273ce7c42"
+                }
+            ]
+        },
+        {
+            "folder": "GoDaddy",
+            "class": "Plugins\\GoDaddy\\GoDaddyPlugin",
+            "name": "GoDaddy",
+            "description": {
+                "en": "Registers, renews, transfers and syncs domains through a GoDaddy account with an API key.",
+                "el": "Καταχωρεί, ανανεώνει, μεταφέρει και συγχρονίζει domains μέσω λογαριασμού GoDaddy με κλειδί API."
+            },
+            "category": "Registrars",
+            "author": {
+                "name": "GaiaCP",
+                "url": "https://gaiacp.digital"
+            },
+            "licence": "GPL-3.0-or-later",
+            "official": true,
+            "versions": [
+                {
+                    "version": "1.0.1",
+                    "requires": "0.1.0",
+                    "php": "8.3",
+                    "released_at": "2026-11-17T19:09:35Z",
+                    "url": "zips/GoDaddy-1.0.1.zip",
+                    "sha256": "c62b84318ea73176fce9e6950c8bd77c6716dd38c11f8bef042899438efc6029",
+                    "size": 12954,
+                    "changelog": "- Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that\n  had it keeps it, with its settings and data, and updates it from the catalogue from now on. No change to how it\n  works.",
+                    "source": "26566366d15045093eff31de641ce188980b2d3a28b535e4091c25b95fcc9e2a"
                 }
             ]
         },
@@ -95,6 +211,122 @@
                     "size": 1005,
                     "changelog": "- First version",
                     "source": "f84b76cf0ada4ab26c9b6c34f0b94f7df02d34343b7dfb392369d9559f73a440"
+                }
+            ]
+        },
+        {
+            "folder": "HetrixTools",
+            "class": "Plugins\\HetrixTools\\HetrixToolsPlugin",
+            "name": "HetrixTools",
+            "description": {
+                "en": "Shows whether each server is up from its HetrixTools uptime monitor, and tells you in the bell when one goes down.",
+                "el": "Δείχνει αν κάθε server λειτουργεί από τον uptime monitor του στο HetrixTools και σε ειδοποιεί στο καμπανάκι όταν κάποιος πέσει."
+            },
+            "category": "Monitoring",
+            "author": {
+                "name": "GaiaCP",
+                "url": "https://gaiacp.digital"
+            },
+            "licence": "GPL-3.0-or-later",
+            "official": true,
+            "versions": [
+                {
+                    "version": "1.0.5",
+                    "requires": "0.1.0",
+                    "php": "8.3",
+                    "released_at": "2026-11-17T19:09:35Z",
+                    "url": "zips/HetrixTools-1.0.5.zip",
+                    "sha256": "bd35f7c31080f71a1231eae9fb57b453f19bf727859469a68e4b0409d73e07a1",
+                    "size": 17143,
+                    "changelog": "- Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that\n  had it keeps it, with its settings and data, and updates it from the catalogue from now on. No change to how it\n  works.",
+                    "source": "30ac0e92f5133b7ab5c620193c25d1992540eab83816b0c6086c40d91932c5e9"
+                }
+            ]
+        },
+        {
+            "folder": "Iris",
+            "class": "Plugins\\Iris\\IrisPlugin",
+            "name": "IRIS",
+            "description": {
+                "en": "Clients pay their payment notices by IRIS from their bank's app: your IRIS number and your bank's QR code are shown on unpaid notices. You record the payments by hand.",
+                "el": "Οι πελάτες πληρώνουν τις ειδοποιήσεις πληρωμής με IRIS από την εφαρμογή της τράπεζάς τους: ο αριθμός IRIS και το QR code της τράπεζάς σου φαίνονται στις απλήρωτες ειδοποιήσεις. Τις πληρωμές τις καταχωρίζεις εσύ."
+            },
+            "category": "Payments",
+            "author": {
+                "name": "GaiaCP",
+                "url": "https://gaiacp.digital"
+            },
+            "licence": "GPL-3.0-or-later",
+            "official": true,
+            "versions": [
+                {
+                    "version": "1.1.1",
+                    "requires": "0.9.0",
+                    "php": "8.3",
+                    "released_at": "2026-11-17T19:09:35Z",
+                    "url": "zips/Iris-1.1.1.zip",
+                    "sha256": "c2f59e4eaeb059dc2d67faa9355db3ff82559399222d66cf784a19639d0f54bd",
+                    "size": 20434,
+                    "changelog": "- Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that\n  had it keeps it, with its settings and data, and updates it from the catalogue from now on. No change to how it\n  works.\n- Reads the demo switch from the config instead of a class GaiaCP keeps for its own plugins.",
+                    "source": "45153862d5d7f2a1f92bff5f57ed11707da8ddf02d9dba28a04304bf991394e2"
+                }
+            ]
+        },
+        {
+            "folder": "Kimi",
+            "class": "Plugins\\Kimi\\KimiPlugin",
+            "name": "Kimi",
+            "description": {
+                "en": "Kimi, Moonshot AI's assistant, for the AI assistant: it improves and translates texts you write, with your own API key.",
+                "el": "Το Kimi, το AI της Moonshot AI, για τον βοηθό AI: βελτιώνει και μεταφράζει τα κείμενα που γράφεις, με δικό σου API key."
+            },
+            "category": "AI",
+            "author": {
+                "name": "GaiaCP",
+                "url": "https://gaiacp.digital"
+            },
+            "licence": "GPL-3.0-or-later",
+            "official": true,
+            "versions": [
+                {
+                    "version": "1.0.3",
+                    "requires": "0.1.0",
+                    "php": "8.3",
+                    "released_at": "2026-11-17T19:09:35Z",
+                    "url": "zips/Kimi-1.0.3.zip",
+                    "sha256": "d62d1f8f1e94d7e15b0cec942032382a80ba41ce6c27979a758178eeeb3d1c6b",
+                    "size": 6543,
+                    "changelog": "- Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that\n  had it keeps it, with its settings and data, and updates it from the catalogue from now on. No change to how it\n  works.",
+                    "source": "48d191b8385600b137443fd7d67c13ce6e59f893224ddc8690a62990042b149d"
+                }
+            ]
+        },
+        {
+            "folder": "Ollama",
+            "class": "Plugins\\Ollama\\OllamaPlugin",
+            "name": "Ollama",
+            "description": {
+                "en": "Ollama for the AI assistant: an open model such as Llama, Qwen or Gemma on your own server or computer, so texts never leave your machines.",
+                "el": "Το Ollama για τον βοηθό AI: ένα ανοιχτό μοντέλο όπως Llama, Qwen ή Gemma στον δικό σου server ή υπολογιστή, ώστε τα κείμενα να μη φεύγουν ποτέ από τα μηχανήματά σου."
+            },
+            "category": "AI",
+            "author": {
+                "name": "GaiaCP",
+                "url": "https://gaiacp.digital"
+            },
+            "licence": "GPL-3.0-or-later",
+            "official": true,
+            "versions": [
+                {
+                    "version": "1.0.1",
+                    "requires": "0.3.1",
+                    "php": "8.3",
+                    "released_at": "2026-11-17T19:09:35Z",
+                    "url": "zips/Ollama-1.0.1.zip",
+                    "sha256": "106e1139a422069bc78344c559b60799f131be822c040aeddd8d26349ffbd586",
+                    "size": 11141,
+                    "changelog": "- Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that\n  had it keeps it, with its settings and data, and updates it from the catalogue from now on. No change to how it\n  works.",
+                    "source": "3bbb3878f7c8e25eca55421505e750f1f50c62c5ed66fce71f65a0f0e594561e"
                 }
             ]
         },
