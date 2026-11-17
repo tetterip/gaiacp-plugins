@@ -1,6 +1,6 @@
 {
     "format": 1,
-    "generated_at": "2026-11-17T19:09:35Z",
+    "generated_at": "2026-11-17T20:56:28Z",
     "plugins": [
         {
             "folder": "Aade",
@@ -15,6 +15,10 @@
                 "name": "GaiaCP",
                 "url": "https://gaiacp.digital"
             },
+            "tags": [
+                "greece",
+                "tax"
+            ],
             "licence": "GPL-3.0-or-later",
             "official": true,
             "versions": [
@@ -44,6 +48,10 @@
                 "name": "GaiaCP",
                 "url": "https://gaiacp.digital"
             },
+            "tags": [
+                "greece",
+                "cards"
+            ],
             "licence": "GPL-3.0-or-later",
             "official": true,
             "versions": [
@@ -73,6 +81,10 @@
                 "name": "GaiaCP",
                 "url": "https://gaiacp.digital"
             },
+            "tags": [
+                "greece",
+                "domains"
+            ],
             "licence": "GPL-3.0-or-later",
             "official": true,
             "versions": [
@@ -102,6 +114,9 @@
                 "name": "GaiaCP",
                 "url": "https://gaiacp.digital"
             },
+            "tags": [
+                "hosting"
+            ],
             "licence": "GPL-3.0-or-later",
             "official": true,
             "versions": [
@@ -131,6 +146,10 @@
                 "name": "GaiaCP",
                 "url": "https://gaiacp.digital"
             },
+            "tags": [
+                "greece",
+                "cards"
+            ],
             "licence": "GPL-3.0-or-later",
             "official": true,
             "versions": [
@@ -160,6 +179,9 @@
                 "name": "GaiaCP",
                 "url": "https://gaiacp.digital"
             },
+            "tags": [
+                "domains"
+            ],
             "licence": "GPL-3.0-or-later",
             "official": true,
             "versions": [
@@ -189,6 +211,9 @@
                 "name": "GaiaCP",
                 "url": "https://gaiacp.digital"
             },
+            "tags": [
+                "example"
+            ],
             "licence": "GPL-3.0-or-later",
             "official": true,
             "versions": [
@@ -227,6 +252,9 @@
                 "name": "GaiaCP",
                 "url": "https://gaiacp.digital"
             },
+            "tags": [
+                "uptime"
+            ],
             "licence": "GPL-3.0-or-later",
             "official": true,
             "versions": [
@@ -256,6 +284,10 @@
                 "name": "GaiaCP",
                 "url": "https://gaiacp.digital"
             },
+            "tags": [
+                "greece",
+                "bank-transfer"
+            ],
             "licence": "GPL-3.0-or-later",
             "official": true,
             "versions": [
@@ -285,6 +317,9 @@
                 "name": "GaiaCP",
                 "url": "https://gaiacp.digital"
             },
+            "tags": [
+                "ai"
+            ],
             "licence": "GPL-3.0-or-later",
             "official": true,
             "versions": [
@@ -314,6 +349,9 @@
                 "name": "GaiaCP",
                 "url": "https://gaiacp.digital"
             },
+            "tags": [
+                "ai"
+            ],
             "licence": "GPL-3.0-or-later",
             "official": true,
             "versions": [
@@ -343,6 +381,11 @@
                 "name": "GaiaCP",
                 "url": "https://gaiacp.digital"
             },
+            "tags": [
+                "greece",
+                "cards",
+                "bank-transfer"
+            ],
             "licence": "GPL-3.0-or-later",
             "official": true,
             "versions": [
