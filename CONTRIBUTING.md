@@ -24,7 +24,7 @@ Your plugin goes in `plugins/<Folder>/`, as GaiaCP loads it (see GaiaCP's `docs/
 }
 ```
 
-- `category`: Servers, Registrars, Monitoring, Payments, Integrations or Themes.
+- `category`: Servers, Registrars, Monitoring, Payments, Integrations, AI or Themes.
 - `tags`: up to 6 from ai, bank-transfer, cards, chat, domains, email, example, greece, hosting, import, invoicing,
   security, sign-in, ssl, tax and uptime (the list is `TAGS` in `bin/catalogue`; ask for a new one in your pull
   request). Admins filter the catalogue by them. Optional; the maintainer may retag a plugin in

@@ -1,0 +1,17 @@
+{
+    "version": "1.0.1",
+    "requires": "0.1.0",
+    "class": "Plugins\\GoDaddy\\GoDaddyPlugin",
+    "name": "GoDaddy",
+    "description": {
+        "en": "Registers, renews, transfers and syncs domains through a GoDaddy account with an API key.",
+        "el": "Καταχωρεί, ανανεώνει, μεταφέρει και συγχρονίζει domains μέσω λογαριασμού GoDaddy με κλειδί API."
+    },
+    "category": "Registrars",
+    "author": {
+        "name": "GaiaCP",
+        "url": "https://gaiacp.digital"
+    },
+    "licence": "GPL-3.0-or-later",
+    "php": "8.3"
+}

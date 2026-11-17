@@ -1,0 +1,17 @@
+{
+    "version": "1.1.1",
+    "requires": "0.1.0",
+    "class": "Plugins\\Enhance\\EnhancePlugin",
+    "name": "Enhance",
+    "description": {
+        "en": "Creates, suspends and removes hosting subscriptions on Enhance control panels.",
+        "el": "Δημιουργεί, αναστέλλει και διαγράφει συνδρομές φιλοξενίας σε control panels Enhance."
+    },
+    "category": "Servers",
+    "author": {
+        "name": "GaiaCP",
+        "url": "https://gaiacp.digital"
+    },
+    "licence": "GPL-3.0-or-later",
+    "php": "8.3"
+}

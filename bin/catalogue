@@ -17,7 +17,7 @@
 const MAX_FILES = 2000;
 const MAX_BYTES = 50 * 1024 * 1024;
 const MAX_ZIP_BYTES = 10 * 1024 * 1024; // GaiaCP's gaiacp.plugins.max_upload_kb default
-const CATEGORIES = ['Servers', 'Registrars', 'Payments', 'Monitoring', 'Integrations', 'Themes'];
+const CATEGORIES = ['Servers', 'Registrars', 'Payments', 'Monitoring', 'Integrations', 'AI', 'Themes'];
 // What a plugin can be tagged with, and the English name the public page shows (GaiaCP has its own translations; it
 // shows a tag it doesn't know as it is). A new tag is added here, and to GaiaCP's App\Plugins\Catalogue\Tags.
 const TAGS = [

@@ -1,0 +1,17 @@
+{
+    "version": "1.2.1",
+    "requires": "0.1.0",
+    "class": "Plugins\\EasyGr\\EasyGrPlugin",
+    "name": "easy.gr",
+    "description": {
+        "en": "Registers, renews, transfers and syncs domains through an easy.gr reseller account.",
+        "el": "Καταχωρεί, ανανεώνει, μεταφέρει και συγχρονίζει domains μέσω λογαριασμού μεταπωλητή easy.gr."
+    },
+    "category": "Registrars",
+    "author": {
+        "name": "GaiaCP",
+        "url": "https://gaiacp.digital"
+    },
+    "licence": "GPL-3.0-or-later",
+    "php": "8.3"
+}

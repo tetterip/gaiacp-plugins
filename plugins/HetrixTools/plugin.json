@@ -1,0 +1,17 @@
+{
+    "version": "1.0.5",
+    "requires": "0.1.0",
+    "class": "Plugins\\HetrixTools\\HetrixToolsPlugin",
+    "name": "HetrixTools",
+    "description": {
+        "en": "Shows whether each server is up from its HetrixTools uptime monitor, and tells you in the bell when one goes down.",
+        "el": "Δείχνει αν κάθε server λειτουργεί από τον uptime monitor του στο HetrixTools και σε ειδοποιεί στο καμπανάκι όταν κάποιος πέσει."
+    },
+    "category": "Monitoring",
+    "author": {
+        "name": "GaiaCP",
+        "url": "https://gaiacp.digital"
+    },
+    "licence": "GPL-3.0-or-later",
+    "php": "8.3"
+}
