@@ -7,5 +7,11 @@
         "Enom", "FlatTheme", "GaiaTheme", "GoGetSsl", "GoogleLogin", "Hestia", "HetrixTools", "Plesk", "Recaptcha",
         "SiteChecks", "Slack", "Stripe", "Telegram", "TicketMail", "Turnstile", "UptimeKuma", "UptimeRobot", "Vies",
         "Webhooks", "WhmcsImport"
-    ]
+    ],
+    "tags": {
+        "AlphaBank": ["greece", "cards"],
+        "Eurobank": ["greece", "cards"],
+        "PiraeusBank": ["greece", "cards", "bank-transfer"],
+        "HelloWorld": ["example"]
+    }
 }

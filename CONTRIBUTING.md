@@ -16,6 +16,7 @@ Your plugin goes in `plugins/<Folder>/`, as GaiaCP loads it (see GaiaCP's `docs/
     "name": "My Panel",
     "description": {"en": "Creates and suspends hosting accounts on My Panel.", "el": "…"},
     "category": "Servers",
+    "tags": ["hosting"],
     "author": {"name": "Your name", "url": "https://example.com"},
     "homepage": "https://example.com/gaiacp-my-panel",
     "licence": "GPL-3.0-or-later",
@@ -24,6 +25,10 @@ Your plugin goes in `plugins/<Folder>/`, as GaiaCP loads it (see GaiaCP's `docs/
 ```
 
 - `category`: Servers, Registrars, Monitoring, Payments, Integrations or Themes.
+- `tags`: up to 6 from ai, bank-transfer, cards, chat, domains, email, example, greece, hosting, import, invoicing,
+  security, sign-in, ssl, tax and uptime (the list is `TAGS` in `bin/catalogue`; ask for a new one in your pull
+  request). Admins filter the catalogue by them. Optional; the maintainer may retag a plugin in
+  `catalogue.config.json` (its `tags` win over `plugin.json`'s), which needs no new version.
 - `description` may be one English text, or one per language (`en` is required).
 - `licence`: an SPDX name. GaiaCP is GPL-3.0-or-later; a plugin should use a GPL-compatible licence.
 - `homepage` and `php` (the oldest PHP it needs) are optional.

@@ -18,6 +18,15 @@ const MAX_FILES = 2000;
 const MAX_BYTES = 50 * 1024 * 1024;
 const MAX_ZIP_BYTES = 10 * 1024 * 1024; // GaiaCP's gaiacp.plugins.max_upload_kb default
 const CATEGORIES = ['Servers', 'Registrars', 'Payments', 'Monitoring', 'Integrations', 'Themes'];
+// What a plugin can be tagged with, and the English name the public page shows (GaiaCP has its own translations; it
+// shows a tag it doesn't know as it is). A new tag is added here, and to GaiaCP's App\Plugins\Catalogue\Tags.
+const TAGS = [
+    'ai' => 'AI', 'bank-transfer' => 'Bank transfer', 'cards' => 'Card payments', 'chat' => 'Chat', 'domains' => 'Domains',
+    'email' => 'Email', 'example' => 'Example', 'greece' => 'Greece', 'hosting' => 'Hosting', 'import' => 'Import',
+    'invoicing' => 'Invoicing', 'security' => 'Security', 'sign-in' => 'Sign-in', 'ssl' => 'SSL', 'tax' => 'Tax',
+    'uptime' => 'Uptime',
+];
+const MAX_TAGS = 6;
 const ROOT = __DIR__.'/..';
 
 final class Problem extends RuntimeException {}
@@ -77,7 +86,7 @@ function keygen(): int
     return 0;
 }
 
-/** @return array{base_url: string, repository: string, official: list<string>, bundled: list<string>} */
+/** @return array{base_url: string, repository: string, official: list<string>, bundled: list<string>, tags?: array<string, list<string>>} */
 function config(): array
 {
     static $config;
@@ -177,6 +186,8 @@ function inspect(string $folder): array
         throw new Problem('plugin.json needs "category": one of '.implode(', ', CATEGORIES));
     }
 
+    $tags = tags($folder, $manifest);
+
     $author = is_array($manifest['author'] ?? null) ? $manifest['author'] : ['name' => (string) ($manifest['author'] ?? '')];
     if (trim((string) ($author['name'] ?? '')) === '') {
         throw new Problem('plugin.json needs "author": {"name": ..., "url": ...}');
@@ -215,6 +226,7 @@ function inspect(string $folder): array
         'description' => $description,
         'category' => $category,
         'author' => array_filter(['name' => trim((string) $author['name']), 'url' => link_or_null($author['url'] ?? null)]),
+        'tags' => $tags === [] ? null : $tags,
         'homepage' => link_or_null($manifest['homepage'] ?? null),
         'licence' => trim((string) $manifest['licence']),
         'official' => in_array($folder, config()['official'], true),
@@ -225,6 +237,31 @@ function inspect(string $folder): array
         'files' => $files,
         'source' => hash_final($hash),
     ];
+}
+
+/**
+ * The plugin's tags: catalogue.config.json's "tags" for the folder when it has them (the maintainer can retag a
+ * published plugin there without a new version), else plugin.json's "tags". Each one must be in TAGS.
+ *
+ * @return list<string>
+ */
+function tags(string $folder, array $manifest): array
+{
+    $tags = config()['tags'][$folder] ?? $manifest['tags'] ?? [];
+    if (! is_array($tags) || ! array_is_list($tags)) {
+        throw new Problem('"tags" must be a list, like ["greece", "cards"]');
+    }
+
+    $tags = array_values(array_unique(array_map(fn ($tag) => strtolower(trim((string) $tag)), $tags)));
+    if ($unknown = array_diff($tags, array_keys(TAGS))) {
+        throw new Problem('unknown tag "'.reset($unknown).'": the tags are '.implode(', ', array_keys(TAGS)).' (ask for a new one in the pull request)');
+    }
+
+    if (count($tags) > MAX_TAGS) {
+        throw new Problem('at most '.MAX_TAGS.' tags');
+    }
+
+    return $tags;
 }
 
 /** @return list<string> the folder's files, relative, sorted; dot files left out; a symbolic link refused */
@@ -305,7 +342,7 @@ function build(string $out, string $baseUrl): int
         usort($versions, fn (array $a, array $b) => version_compare($b['version'], $a['version']));
 
         $plugins[] = [
-            ...array_filter(array_intersect_key($plugin, array_flip(['folder', 'class', 'name', 'description', 'category', 'author', 'homepage', 'licence', 'official'])), fn ($value) => $value !== null),
+            ...array_filter(array_intersect_key($plugin, array_flip(['folder', 'class', 'name', 'description', 'category', 'tags', 'author', 'homepage', 'licence', 'official'])), fn ($value) => $value !== null),
             'versions' => $versions,
         ];
     }
@@ -408,13 +445,16 @@ function page(array $catalogue, string $baseUrl): string
         $author = isset($plugin['author']['url'])
             ? '<a href="'.e($plugin['author']['url']).'" rel="nofollow">'.e($plugin['author']['name']).'</a>'
             : e($plugin['author']['name']);
-        $search = strtolower(implode(' ', [$plugin['name'], $plugin['folder'], $plugin['category'], $plugin['author']['name'], ...array_values($plugin['description'])]));
+        $tags = $plugin['tags'] ?? [];
+        $search = strtolower(implode(' ', [$plugin['name'], $plugin['folder'], $plugin['category'], $plugin['author']['name'], ...array_values($plugin['description']), ...array_map(fn (string $tag) => TAGS[$tag] ?? $tag, $tags)]));
+        $chips = $tags === [] ? '' : '<p class="tags">'.implode('', array_map(fn (string $tag) => '<button type="button" class="tag" data-tag="'.e($tag).'">'.e(TAGS[$tag] ?? $tag).'</button>', $tags)).'</p>';
 
-        $cards .= '<article class="card" id="'.e($plugin['folder']).'" data-search="'.e($search).'">'
+        $cards .= '<article class="card" id="'.e($plugin['folder']).'" data-search="'.e($search).'" data-tags="'.e(implode(' ', $tags)).'">'
             .'<header><h2>'.e($plugin['name']).'</h2>'
             .'<span class="badge '.($plugin['official'] ? 'official">Official' : 'community">Community').'</span></header>'
             .'<p class="desc" lang="en">'.e($plugin['description']['en']).'</p>'
             .(isset($plugin['description']['el']) ? '<p class="desc" lang="el">'.e($plugin['description']['el']).'</p>' : '')
+            .$chips
             .'<dl><dt>Version</dt><dd>'.e($latest['version']).'</dd><dt>Needs</dt><dd>GaiaCP '.e($latest['requires']).'+'.(isset($latest['php']) ? ', PHP '.e($latest['php']).'+' : '').'</dd>'
             .'<dt>Category</dt><dd>'.e($plugin['category']).'</dd><dt>Author</dt><dd>'.$author.'</dd><dt>Licence</dt><dd>'.e($plugin['licence']).'</dd></dl>'
             .'<details><summary>What\'s new in '.e($latest['version']).'</summary>'.changelog_html($latest['changelog'] ?? '')
@@ -424,6 +464,11 @@ function page(array $catalogue, string $baseUrl): string
             .'<a href="'.e($repository.'/tree/main/plugins/'.$plugin['folder']).'">Source</a></footer>'
             .'</article>';
     }
+
+    $used = array_merge([], ...array_map(fn (array $plugin) => $plugin['tags'] ?? [], $catalogue['plugins']));
+    $used = array_values(array_filter(array_keys(TAGS), fn (string $tag) => in_array($tag, $used, true)));
+    $filters = $used === [] ? '' : '<div class="tags filters" role="group" aria-label="Tags">'
+        .implode('', array_map(fn (string $tag) => '<button type="button" class="tag" data-tag="'.e($tag).'" aria-pressed="false">'.e(TAGS[$tag]).'</button>', $used)).'</div>';
 
     $count = count($catalogue['plugins']);
     $plural = $count === 1 ? 'plugin' : 'plugins';
@@ -504,6 +549,11 @@ details p { margin: 6px 0; }
 .button { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 16px; border-radius: 8px; background: var(--button); color: #fff; font-weight: 600; text-decoration: none; transition: background .15s ease; }
 .button:hover { background: #0e211e; color: #fff; }
 .empty { color: var(--muted); margin-top: 28px; display: none; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.filters { margin-top: 20px; }
+.tag { font: 500 .8rem/1 var(--sans); padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--soft); color: var(--ink-soft); cursor: pointer; }
+.tag:hover { border-color: #a1a1aa; color: var(--ink); }
+.tag[aria-pressed=true] { background: var(--accent); border-color: var(--accent); color: #fff; }
 .cta { margin-top: 72px; padding: 36px 40px; border-radius: 14px; background: var(--band); border: 1px solid var(--line); display: flex; gap: 16px 40px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
 .cta h2 { font-size: clamp(1.5rem, 3vw, 2rem); margin-bottom: .3em; }
 .cta p { margin: 0; color: var(--ink-soft); max-width: 36em; }
@@ -539,6 +589,7 @@ Every plugin here was reviewed before it was listed.</p>
 <span class="eyebrow"><b>01</b>Catalogue</span>
 <input type="search" id="search" placeholder="Search plugins" aria-label="Search plugins">
 </div>
+{$filters}
 <div class="grid" id="plugins">{$cards}</div>
 <p class="empty" id="empty">No plugin matches.</p>
 <div class="cta">
@@ -559,12 +610,25 @@ Every plugin here was reviewed before it was listed.</p>
 </footer>
 <script>
 const search = document.getElementById('search'), cards = [...document.querySelectorAll('.card')], empty = document.getElementById('empty');
-search.addEventListener('input', () => {
+const filters = [...document.querySelectorAll('.filters .tag')];
+let tag = null;
+function show() {
     const words = search.value.toLowerCase().split(/\s+/).filter(Boolean);
     let shown = 0;
-    cards.forEach(card => { const hit = words.every(word => card.dataset.search.includes(word)); card.hidden = !hit; shown += hit; });
+    cards.forEach(card => {
+        const hit = words.every(word => card.dataset.search.includes(word)) && (!tag || card.dataset.tags.split(' ').includes(tag));
+        card.hidden = !hit; shown += hit;
+    });
+    filters.forEach(button => button.setAttribute('aria-pressed', button.dataset.tag === tag));
     empty.style.display = shown ? 'none' : 'block';
+}
+document.addEventListener('click', event => {
+    const button = event.target.closest('.tag');
+    if (!button) return;
+    tag = tag === button.dataset.tag ? null : button.dataset.tag;
+    show();
 });
+search.addEventListener('input', show);
 </script>
 </body>
 </html>
