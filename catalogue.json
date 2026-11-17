@@ -1,7 +1,65 @@
 {
     "format": 1,
-    "generated_at": "2026-11-04T15:22:58Z",
+    "generated_at": "2026-11-17T18:19:57Z",
     "plugins": [
+        {
+            "folder": "AlphaBank",
+            "class": "Plugins\\AlphaBank\\AlphaBankPlugin",
+            "name": "Alpha Bank",
+            "description": {
+                "en": "Clients pay their payment notices by card in the client area, on Alpha Bank's own page (Alpha e-Commerce, Cardlink).",
+                "el": "Οι πελάτες πληρώνουν τις ειδοποιήσεις πληρωμής τους με κάρτα στην περιοχή πελατών, στη σελίδα της Alpha Bank (Alpha e-Commerce, Cardlink)."
+            },
+            "category": "Payments",
+            "author": {
+                "name": "GaiaCP",
+                "url": "https://gaiacp.digital"
+            },
+            "licence": "GPL-3.0-or-later",
+            "official": true,
+            "versions": [
+                {
+                    "version": "1.0.1",
+                    "requires": "0.9.0",
+                    "php": "8.3",
+                    "released_at": "2026-11-17T18:19:57Z",
+                    "url": "zips/AlphaBank-1.0.1.zip",
+                    "sha256": "0daaf2774a1e4acba9dbfe4e45cfecf34291706cae78ee388ee539c93ab165bd",
+                    "size": 46292,
+                    "changelog": "- Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that\n  had it keeps it, with its settings and payments, and updates it from the catalogue from now on. No change to\n  how it works.",
+                    "source": "62dc6af104a2e9443564e0ab9f62d07dd0b2e44835485e113f0f93279a8d9c8c"
+                }
+            ]
+        },
+        {
+            "folder": "Eurobank",
+            "class": "Plugins\\Eurobank\\EurobankPlugin",
+            "name": "Eurobank",
+            "description": {
+                "en": "Clients pay their payment notices by card in the client area, on Eurobank's own page (Cardlink).",
+                "el": "Οι πελάτες πληρώνουν τις ειδοποιήσεις πληρωμής τους με κάρτα στην περιοχή πελατών, στη σελίδα της Eurobank (Cardlink)."
+            },
+            "category": "Payments",
+            "author": {
+                "name": "GaiaCP",
+                "url": "https://gaiacp.digital"
+            },
+            "licence": "GPL-3.0-or-later",
+            "official": true,
+            "versions": [
+                {
+                    "version": "1.0.1",
+                    "requires": "0.9.0",
+                    "php": "8.3",
+                    "released_at": "2026-11-17T18:19:57Z",
+                    "url": "zips/Eurobank-1.0.1.zip",
+                    "sha256": "ff71dde41eca84cc087c6b632dc093b9e9f44c903e5ac6cf5efefceb5117279a",
+                    "size": 44597,
+                    "changelog": "- Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that\n  had it keeps it, with its settings and payments, and updates it from the catalogue from now on. No change to\n  how it works.",
+                    "source": "c6eb60f71d19a8b96462de3bb9ab51493cb05f57fb3d1511a2482f7273ce7c42"
+                }
+            ]
+        },
         {
             "folder": "HelloWorld",
             "class": "Plugins\\HelloWorld\\HelloWorldPlugin",
@@ -19,6 +77,16 @@
             "official": true,
             "versions": [
                 {
+                    "version": "1.0.1",
+                    "requires": "0.1.0",
+                    "released_at": "2026-11-17T18:19:57Z",
+                    "url": "zips/HelloWorld-1.0.1.zip",
+                    "sha256": "fa7571bd046be6b18c352de31e87acb98fd895b38f9f38265fd4dd2b269cabdc",
+                    "size": 1342,
+                    "changelog": "- Its description in Greek (`lang/el.json`), which shows where a plugin keeps its translations",
+                    "source": "337cc38e03a45313a7043c2fbba2a1702a7fd5f66455a1b3fdf1aa3d38109712"
+                },
+                {
                     "version": "1.0.0",
                     "requires": "0.1.0",
                     "released_at": "2026-10-25T19:55:57Z",
@@ -27,6 +95,35 @@
                     "size": 1005,
                     "changelog": "- First version",
                     "source": "f84b76cf0ada4ab26c9b6c34f0b94f7df02d34343b7dfb392369d9559f73a440"
+                }
+            ]
+        },
+        {
+            "folder": "PiraeusBank",
+            "class": "Plugins\\PiraeusBank\\PiraeusBankPlugin",
+            "name": "Piraeus Bank",
+            "description": {
+                "en": "Clients pay their payment notices by card or IRIS in the client area, on Piraeus Bank's own page (epay paycenter).",
+                "el": "Οι πελάτες πληρώνουν τις ειδοποιήσεις πληρωμής τους με κάρτα ή IRIS στην περιοχή πελατών, στη σελίδα της Τράπεζας Πειραιώς (epay paycenter)."
+            },
+            "category": "Payments",
+            "author": {
+                "name": "GaiaCP",
+                "url": "https://gaiacp.digital"
+            },
+            "licence": "GPL-3.0-or-later",
+            "official": true,
+            "versions": [
+                {
+                    "version": "1.0.1",
+                    "requires": "0.9.0",
+                    "php": "8.3",
+                    "released_at": "2026-11-17T18:19:57Z",
+                    "url": "zips/PiraeusBank-1.0.1.zip",
+                    "sha256": "5877111259b3e78508941cff25e99d7fe19a83496c3a9c7e15c6f565429a6278",
+                    "size": 50205,
+                    "changelog": "- Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that\n  had it keeps it, with its settings and payments, and updates it from the catalogue from now on. No change to\n  how it works.",
+                    "source": "6dc41be19df79214d3fbf8e3bd1c3fe8a9f0d64bfcdc2af77745223d05721a0c"
                 }
             ]
         }
