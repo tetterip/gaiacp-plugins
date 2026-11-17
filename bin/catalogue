@@ -6,7 +6,7 @@
  *
  *   php bin/catalogue keygen                         a new signing key pair (run once, on your own computer)
  *   php bin/catalogue check [Folder ...]             the checks a pull request must pass (all plugins by default)
- *   php bin/catalogue build --out=site               zips, catalogue.json, its signature and the web pages
+ *   php bin/catalogue build --out=site               zips, catalogue.json, its signature and the web pages (one per plugin)
  *
  * build signs with the secret key in the CATALOGUE_SIGNING_KEY environment variable (base64, from keygen). It reads
  * the catalogue already in --out, so versions published before stay listed and their zips are never rebuilt: a
@@ -353,6 +353,14 @@ function build(string $out, string $baseUrl): int
     file_put_contents($out.'/catalogue.json', $json);
     file_put_contents($out.'/catalogue.json.sig', base64_encode(sodium_crypto_sign_detached($json, $secret))."\n");
     file_put_contents($out.'/index.html', page($catalogue, $baseUrl));
+    foreach (glob($out.'/plugins/*/index.html') ?: [] as $old) { // a plugin no longer listed loses its page
+        unlink($old);
+        @rmdir(dirname($old));
+    }
+    foreach ($catalogue['plugins'] as $plugin) {
+        @mkdir($out.'/'.plugin_path($plugin), 0755, true);
+        file_put_contents($out.'/'.plugin_path($plugin).'index.html', plugin_page($plugin, $catalogue['generated_at']));
+    }
     file_put_contents($out.'/.htaccess', "Options -Indexes\nAddType application/json .json\nAddType text/plain .sig\n<Files \"catalogue.json*\">\n    Header set Cache-Control \"max-age=300\"\n</Files>\n");
 
     echo 'Catalogue: '.count($plugins)." plugins, signed.\n";
@@ -401,11 +409,14 @@ function e(?string $text): string
     return htmlspecialchars((string) $text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-/** A changelog section as HTML: "- " lines become a list, the rest paragraphs. */
+/** A changelog section as HTML: "- " lines become a list (indented lines continue an item), the rest paragraphs. */
 function changelog_html(string $text): string
 {
     $html = '';
     $list = false;
+
+    // an indented line carries on the item above it (CHANGELOG.md wraps long items)
+    $text = preg_replace('/\R[ \t]{2,}(?=\S)/', ' ', $text);
 
     foreach (preg_split('/\R/', $text) as $line) {
         $line = trim($line);
@@ -429,7 +440,7 @@ function changelog_html(string $text): string
     return $html.($list ? '</ul>' : '');
 }
 
-/** The public page: every plugin with its latest version, download, requirements and changelog, and a search box. */
+/** The public front page: every plugin with its latest version, tags to filter by, a search box, and a link to its page. */
 function page(array $catalogue, string $baseUrl): string
 {
     $repository = config()['repository'];
@@ -437,30 +448,21 @@ function page(array $catalogue, string $baseUrl): string
 
     foreach ($catalogue['plugins'] as $plugin) {
         $latest = $plugin['versions'][0];
-        $older = '';
-        foreach (array_slice($plugin['versions'], 1) as $version) {
-            $older .= '<li><a href="'.e($version['url']).'">'.e($version['version']).'</a> · GaiaCP '.e($version['requires']).'+</li>';
-        }
-
-        $author = isset($plugin['author']['url'])
-            ? '<a href="'.e($plugin['author']['url']).'" rel="nofollow">'.e($plugin['author']['name']).'</a>'
-            : e($plugin['author']['name']);
         $tags = $plugin['tags'] ?? [];
         $search = strtolower(implode(' ', [$plugin['name'], $plugin['folder'], $plugin['category'], $plugin['author']['name'], ...array_values($plugin['description']), ...array_map(fn (string $tag) => TAGS[$tag] ?? $tag, $tags)]));
         $chips = $tags === [] ? '' : '<p class="tags">'.implode('', array_map(fn (string $tag) => '<button type="button" class="tag" data-tag="'.e($tag).'">'.e(TAGS[$tag] ?? $tag).'</button>', $tags)).'</p>';
+        $url = plugin_path($plugin);
 
         $cards .= '<article class="card" id="'.e($plugin['folder']).'" data-search="'.e($search).'" data-tags="'.e(implode(' ', $tags)).'">'
-            .'<header><h2>'.e($plugin['name']).'</h2>'
-            .'<span class="badge '.($plugin['official'] ? 'official">Official' : 'community">Community').'</span></header>'
+            .'<header><h2><a href="'.e($url).'">'.e($plugin['name']).'</a></h2>'
+            .official_badge($plugin).'</header>'
             .'<p class="desc" lang="en">'.e($plugin['description']['en']).'</p>'
             .(isset($plugin['description']['el']) ? '<p class="desc" lang="el">'.e($plugin['description']['el']).'</p>' : '')
             .$chips
-            .'<dl><dt>Version</dt><dd>'.e($latest['version']).'</dd><dt>Needs</dt><dd>GaiaCP '.e($latest['requires']).'+'.(isset($latest['php']) ? ', PHP '.e($latest['php']).'+' : '').'</dd>'
-            .'<dt>Category</dt><dd>'.e($plugin['category']).'</dd><dt>Author</dt><dd>'.$author.'</dd><dt>Licence</dt><dd>'.e($plugin['licence']).'</dd></dl>'
-            .'<details><summary>What\'s new in '.e($latest['version']).'</summary>'.changelog_html($latest['changelog'] ?? '')
-            .($older !== '' ? '<p class="older">Earlier versions</p><ul>'.$older.'</ul>' : '').'</details>'
-            .'<footer><a class="button" href="'.e($latest['url']).'" download>Download zip</a>'
-            .(isset($plugin['homepage']) ? '<a href="'.e($plugin['homepage']).'" rel="nofollow">Website</a>' : '')
+            .'<dl><dt>Version</dt><dd>'.e($latest['version']).'</dd><dt>Needs</dt><dd>'.needs($latest).'</dd>'
+            .'<dt>Category</dt><dd>'.e($plugin['category']).'</dd><dt>Author</dt><dd>'.author($plugin).'</dd></dl>'
+            .'<footer><a class="button" href="'.e($url).'">Details</a>'
+            .'<a href="'.e($latest['url']).'" download>Download zip</a>'
             .'<a href="'.e($repository.'/tree/main/plugins/'.$plugin['folder']).'">Source</a></footer>'
             .'</article>';
     }
@@ -472,9 +474,139 @@ function page(array $catalogue, string $baseUrl): string
 
     $count = count($catalogue['plugins']);
     $plural = $count === 1 ? 'plugin' : 'plugins';
-    $updated = e(substr($catalogue['generated_at'], 0, 10));
+
+    $main = <<<HTML
+<main>
+<section class="hero">
+<div class="wrap">
+<p class="pill"><b>Plugin catalogue</b> · {$count} {$plural} · signed</p>
+<h1>Plugins for <em>GaiaCP</em></h1>
+<p class="lead">Install them from your panel under Settings → System → Plugin catalogue, or download the zip and upload it there.
+Every plugin here was reviewed before it was listed.</p>
+<div class="head">
+<span class="eyebrow"><b>01</b>Catalogue</span>
+<input type="search" id="search" placeholder="Search plugins" aria-label="Search plugins">
+</div>
+{$filters}
+<div class="grid" id="plugins">{$cards}</div>
+<p class="empty" id="empty">No plugin matches.</p>
+<div class="cta">
+<div>
+<h2>Made a plugin?</h2>
+<p>Send it as a pull request. It is reviewed, then listed here and in every GaiaCP panel's catalogue.</p>
+</div>
+<a class="button" href="{$repository}/blob/main/CONTRIBUTING.md">Submit yours</a>
+</div>
+</div>
+</section>
+</main>
+HTML;
+
+    $script = <<<'HTML'
+<script>
+const search = document.getElementById('search'), cards = [...document.querySelectorAll('.card')], empty = document.getElementById('empty');
+const filters = [...document.querySelectorAll('.filters .tag')];
+let tag = null;
+function show() {
+    const words = search.value.toLowerCase().split(/\s+/).filter(Boolean);
+    let shown = 0;
+    cards.forEach(card => {
+        const hit = words.every(word => card.dataset.search.includes(word)) && (!tag || card.dataset.tags.split(' ').includes(tag));
+        card.hidden = !hit; shown += hit;
+    });
+    filters.forEach(button => button.setAttribute('aria-pressed', button.dataset.tag === tag));
+    empty.style.display = shown ? 'none' : 'block';
+}
+document.addEventListener('click', event => {
+    const button = event.target.closest('.tag');
+    if (!button) return;
+    tag = tag === button.dataset.tag ? null : button.dataset.tag;
+    show();
+});
+search.addEventListener('input', show);
+const picked = new URLSearchParams(location.search).get('tag');
+if (picked && filters.some(button => button.dataset.tag === picked)) { tag = picked; show(); }
+</script>
+HTML;
+
+    return layout('GaiaCP plugins', 'Plugins for GaiaCP, the open source hosting billing and provisioning panel: server panels, registrars, payments, monitoring and more.', '', $main, $catalogue['generated_at'], $script);
+}
+
+/** One plugin's own page (plugins/<Folder>/): both descriptions, tags, every version with its changelog and zip. */
+function plugin_page(array $plugin, string $generatedAt): string
+{
+    $repository = config()['repository'];
+    $root = '../../';
+    $latest = $plugin['versions'][0];
+    $zip = fn (array $version) => preg_match('#^https?://#', $version['url']) ? $version['url'] : $root.$version['url'];
+
+    $tags = $plugin['tags'] ?? [];
+    $chips = $tags === [] ? '' : '<p class="tags">'.implode('', array_map(fn (string $tag) => '<a class="tag" href="'.e($root.'?tag='.$tag).'">'.e(TAGS[$tag] ?? $tag).'</a>', $tags)).'</p>';
+
+    $versions = '';
+    foreach ($plugin['versions'] as $version) {
+        $versions .= '<section class="version"><h3>'.e($version['version'])
+            .(isset($version['released_at']) ? ' <small>'.e(substr($version['released_at'], 0, 10)).'</small>' : '').'</h3>'
+            .changelog_html($version['changelog'] ?? '')
+            .'<p class="older">Needs '.needs($version).' · <a href="'.e($zip($version)).'" download>'.e($plugin['folder'].'-'.$version['version'].'.zip').'</a></p></section>';
+    }
+
+    $facts = '<dl><dt>Version</dt><dd>'.e($latest['version']).'</dd><dt>Needs</dt><dd>'.needs($latest).'</dd>'
+        .'<dt>Category</dt><dd>'.e($plugin['category']).'</dd><dt>Author</dt><dd>'.author($plugin).'</dd>'
+        .'<dt>Licence</dt><dd>'.e($plugin['licence']).'</dd>'
+        .(isset($latest['sha256']) ? '<dt>SHA-256</dt><dd class="hash">'.e($latest['sha256']).'</dd>' : '').'</dl>';
+
+    $name = e($plugin['name']);
+    $folder = e($plugin['folder']);
+    $badge = official_badge($plugin);
+    $en = '<p class="lead" lang="en">'.e($plugin['description']['en']).'</p>';
+    $el = isset($plugin['description']['el']) ? '<p class="desc" lang="el">'.e($plugin['description']['el']).'</p>' : '';
+    $download = e($zip($latest));
+    $website = isset($plugin['homepage']) ? '<a href="'.e($plugin['homepage']).'" rel="nofollow">Website</a>' : '';
+    $source = e($repository.'/tree/main/plugins/'.$plugin['folder']);
+    $community = $plugin['official'] ? '' : '<p class="note">A community plugin: written by someone else and reviewed before it was listed. Reviewing is not a guarantee, so install it only if you trust its author.</p>';
+
+    $main = <<<HTML
+<main>
+<section class="hero">
+<div class="wrap">
+<p class="pill"><a href="{$root}">Plugin catalogue</a> · {$folder}</p>
+<div class="title"><h1>{$name}</h1>{$badge}</div>
+{$en}
+{$el}
+{$chips}
+{$community}
+<div class="detail">
+<div>
+<div class="head"><span class="eyebrow"><b>01</b>Changelog</span></div>
+{$versions}
+</div>
+<aside>
+<div class="head"><span class="eyebrow"><b>02</b>Details</span></div>
+{$facts}
+<p class="actions"><a class="button" href="{$download}" download>Download zip</a>{$website}<a href="{$source}">Source</a></p>
+<p class="older">In GaiaCP: Settings → System → Plugin catalogue, then Install. Or upload the zip on the Plugins page.</p>
+</aside>
+</div>
+</div>
+</section>
+</main>
+HTML;
+
+    $description = $plugin['description']['en'];
+
+    return layout($plugin['name'].' · GaiaCP plugins', $description, $root, $main, $generatedAt);
+}
+
+/** The page shell both pages share. $root leads back to the catalogue's top folder ('' or '../../'). */
+function layout(string $title, string $description, string $root, string $main, string $generatedAt, string $script = ''): string
+{
+    $repository = config()['repository'];
+    $updated = e(substr($generatedAt, 0, 10));
     $site = 'https://gaiacp.digital';
     $docs = 'https://github.com/tetterip/GaiaCP/blob/main/docs';
+    $title = e($title);
+    $description = e($description);
 
     // The same look as gaiacp.digital: light only, a ledger of hairline rules, serif headings, the Gaia theme colours.
     return <<<HTML
@@ -483,12 +615,12 @@ function page(array $catalogue, string $baseUrl): string
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GaiaCP plugins</title>
-<meta name="description" content="Plugins for GaiaCP, the open source hosting billing and provisioning panel: server panels, registrars, payments, monitoring and more.">
+<title>{$title}</title>
+<meta name="description" content="{$description}">
 <meta name="theme-color" content="#ffffff">
 <meta name="color-scheme" content="light">
 <link rel="icon" href="{$site}/assets/img/mark.svg" type="image/svg+xml">
-<link rel="alternate" type="application/json" href="catalogue.json">
+<link rel="alternate" type="application/json" href="{$root}catalogue.json">
 <style>
 :root {
     --ink: #18181b; --ink-soft: #3f3f46; --muted: #5b5b63; --bg: #fff; --band: #f4f4f5; --soft: #f0f0f2;
@@ -564,6 +696,25 @@ details p { margin: 6px 0; }
 .foot a:hover { color: var(--ink); text-decoration: underline; }
 @media (max-width: 560px) { body { font-size: 16px; } .hero { padding-top: 40px; } .card { padding: 20px; } .cta { padding: 28px 22px; } input[type=search] { max-width: none; margin-left: 0; } }
 @media (prefers-reduced-motion: reduce) { .card, .button { transition: none; } }
+.card h2 a { color: inherit; text-decoration: none; }
+.card h2 a:hover { text-decoration: underline; }
+a.tag { text-decoration: none; display: inline-block; }
+.title { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.title h1 { margin-bottom: .2em; }
+.hero .desc[lang=el] { margin-top: 12px; max-width: 40em; }
+.hero .tags { margin-top: 20px; }
+.note { margin: 20px 0 0; padding: 12px 16px; border-radius: var(--radius); background: #fff7e0; color: var(--ink-soft); font-size: .95rem; max-width: 46em; }
+.detail { display: grid; gap: 16px 48px; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); align-items: start; }
+.detail .head { margin-top: 48px; }
+.version { padding: 18px 0; border-bottom: 1px solid var(--line); }
+.version h3 { margin: 0 0 6px; font: 600 1.15rem/1.3 var(--serif); }
+.version h3 small { font: 400 .85rem var(--mono); color: var(--muted); margin-left: 8px; }
+.version ul { margin: 6px 0; padding-left: 20px; color: var(--ink-soft); }
+.version p { margin: 6px 0; color: var(--ink-soft); }
+aside dl { margin-top: 18px; }
+.hash { font: .75rem/1.5 var(--mono); word-break: break-all; }
+.actions { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin: 20px 0 8px; }
+@media (max-width: 860px) { .detail { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -572,66 +723,46 @@ details p { margin: 6px 0; }
 <a class="brand" href="{$site}/" aria-label="GaiaCP home"><img src="{$site}/assets/img/logo.svg" alt="GaiaCP" width="120" height="30"></a>
 <nav class="nav" aria-label="Links">
 <a href="{$site}/">Home</a>
+<a href="{$root}./">Plugins</a>
 <a class="wide" href="https://demo.gaiacp.digital/admin">Demo</a>
 <a class="wide" href="{$docs}/writing-plugins.md">Writing plugins</a>
 <a href="{$repository}">GitHub</a>
 </nav>
 </div>
 </header>
-<main>
-<section class="hero">
-<div class="wrap">
-<p class="pill"><b>Plugin catalogue</b> · {$count} {$plural} · signed</p>
-<h1>Plugins for <em>GaiaCP</em></h1>
-<p class="lead">Install them from your panel under Settings → Plugins → Catalogue, or download the zip and upload it there.
-Every plugin here was reviewed before it was listed.</p>
-<div class="head">
-<span class="eyebrow"><b>01</b>Catalogue</span>
-<input type="search" id="search" placeholder="Search plugins" aria-label="Search plugins">
-</div>
-{$filters}
-<div class="grid" id="plugins">{$cards}</div>
-<p class="empty" id="empty">No plugin matches.</p>
-<div class="cta">
-<div>
-<h2>Made a plugin?</h2>
-<p>Send it as a pull request. It is reviewed, then listed here and in every GaiaCP panel's catalogue.</p>
-</div>
-<a class="button" href="{$repository}/blob/main/CONTRIBUTING.md">Submit yours</a>
-</div>
-</div>
-</section>
-</main>
+{$main}
 <footer class="foot">
 <div class="wrap">
-<span>Updated {$updated} · <a href="catalogue.json">catalogue.json</a> · <a href="{$repository}">Source on GitHub</a></span>
+<span>Updated {$updated} · <a href="{$root}catalogue.json">catalogue.json</a> · <a href="{$repository}">Source on GitHub</a></span>
 <span><a href="{$site}/">gaiacp.digital</a> · GPL-3.0-or-later</span>
 </div>
 </footer>
-<script>
-const search = document.getElementById('search'), cards = [...document.querySelectorAll('.card')], empty = document.getElementById('empty');
-const filters = [...document.querySelectorAll('.filters .tag')];
-let tag = null;
-function show() {
-    const words = search.value.toLowerCase().split(/\s+/).filter(Boolean);
-    let shown = 0;
-    cards.forEach(card => {
-        const hit = words.every(word => card.dataset.search.includes(word)) && (!tag || card.dataset.tags.split(' ').includes(tag));
-        card.hidden = !hit; shown += hit;
-    });
-    filters.forEach(button => button.setAttribute('aria-pressed', button.dataset.tag === tag));
-    empty.style.display = shown ? 'none' : 'block';
-}
-document.addEventListener('click', event => {
-    const button = event.target.closest('.tag');
-    if (!button) return;
-    tag = tag === button.dataset.tag ? null : button.dataset.tag;
-    show();
-});
-search.addEventListener('input', show);
-</script>
+{$script}
 </body>
 </html>
 
 HTML;
+}
+
+/** Where a plugin's own page is, from the catalogue's top folder. */
+function plugin_path(array $plugin): string
+{
+    return 'plugins/'.$plugin['folder'].'/';
+}
+
+function official_badge(array $plugin): string
+{
+    return '<span class="badge '.($plugin['official'] ? 'official">Official' : 'community">Community').'</span>';
+}
+
+function needs(array $version): string
+{
+    return 'GaiaCP '.e($version['requires']).'+'.(isset($version['php']) ? ', PHP '.e($version['php']).'+' : '');
+}
+
+function author(array $plugin): string
+{
+    return isset($plugin['author']['url'])
+        ? '<a href="'.e($plugin['author']['url']).'" rel="nofollow">'.e($plugin['author']['name']).'</a>'
+        : e($plugin['author']['name']);
 }
