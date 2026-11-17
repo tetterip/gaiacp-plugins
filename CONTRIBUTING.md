@@ -23,7 +23,7 @@ Your plugin goes in `plugins/<Folder>/`, as GaiaCP loads it (see GaiaCP's `docs/
 }
 ```
 
-- `category`: Servers, Registrars, Monitoring, Payments, Integrations or Themes.
+- `category`: Servers, Registrars, Monitoring, Payments, Integrations, AI or Themes.
 - `description` may be one English text, or one per language (`en` is required).
 - `licence`: an SPDX name. GaiaCP is GPL-3.0-or-later; a plugin should use a GPL-compatible licence.
 - `homepage` and `php` (the oldest PHP it needs) are optional.

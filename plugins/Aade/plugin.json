@@ -1,0 +1,17 @@
+{
+    "version": "1.0.4",
+    "requires": "0.1.0",
+    "class": "Plugins\\Aade\\AadePlugin",
+    "name": "ΑΑΔΕ",
+    "description": {
+        "en": "Fills in a client's name, Δ.Ο.Υ., profession and address from their ΑΦΜ.",
+        "el": "Συμπληρώνει την επωνυμία, τη Δ.Ο.Υ., το επάγγελμα και τη διεύθυνση ενός πελάτη από το ΑΦΜ του."
+    },
+    "category": "Integrations",
+    "author": {
+        "name": "GaiaCP",
+        "url": "https://gaiacp.digital"
+    },
+    "licence": "GPL-3.0-or-later",
+    "php": "8.3"
+}
