@@ -1,6 +1,6 @@
 {
     "format": 1,
-    "generated_at": "2026-11-20T10:31:39Z",
+    "generated_at": "2026-11-20T12:49:35Z",
     "plugins": [
         {
             "folder": "Aade",
@@ -239,6 +239,16 @@
             "licence": "GPL-3.0-or-later",
             "official": true,
             "versions": [
+                {
+                    "version": "1.0.2",
+                    "requires": "0.1.0",
+                    "released_at": "2026-11-20T12:49:35Z",
+                    "url": "zips/HelloWorld-1.0.2.zip",
+                    "sha256": "3002a80e3466309699a50771cb36484eeee91d0b0dd26b3bb29b2eb006270375",
+                    "size": 3058,
+                    "changelog": "- Its description in the other languages GaiaCP ships (de, es, fr, it, nl, pl, pt_BR, tr), so Settings → Languages no longer counts it as missing",
+                    "source": "0f1b3cc91c30677a5bc206ff810a2da4bb1d114a913667fe13d574a6f264aa79"
+                },
                 {
                     "version": "1.0.1",
                     "requires": "0.1.0",
