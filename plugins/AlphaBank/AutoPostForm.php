@@ -3,10 +3,12 @@
 namespace Plugins\AlphaBank;
 
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Vite;
 
 /**
  * A small page that posts a form to the bank as soon as it loads (a button does it without JavaScript). The bank's
- * redirect flow needs the client's browser to make that POST: a redirect can't carry the signed fields.
+ * redirect flow needs the client's browser to make that POST: a redirect can't carry the signed fields. The script
+ * carries the page's nonce, for GaiaCP's Content-Security-Policy.
  */
 class AutoPostForm
 {
@@ -25,7 +27,7 @@ class AutoPostForm
             .'@media (prefers-color-scheme:dark){body{color:#ddd;background:#18181b}button{background:#27272a;color:#ddd}}</style></head><body>'
             .'<form id="bank" method="post" action="'.e($form['url']).'" accept-charset="UTF-8">'.$inputs
             .'<p>'.e($message).'</p><button type="submit">'.e($button).'</button></form>'
-            .'<script>document.getElementById("bank").submit();</script></body></html>';
+            .'<script'.(filled($nonce = Vite::cspNonce()) ? ' nonce="'.e($nonce).'"' : '').'>document.getElementById("bank").submit();</script></body></html>';
 
         return response($html)->header('Cache-Control', 'no-store');
     }
