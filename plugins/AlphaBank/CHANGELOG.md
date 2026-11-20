@@ -2,6 +2,11 @@
 
 Every version of this plugin, newest first. The version is in `plugin.json`; it is installed from the plugin catalogue.
 
+## [1.0.2] - 2026-11-20
+
+- The script that sends the form to the bank carries the page's nonce, so it runs under GaiaCP's Content-Security-Policy
+  (GaiaCP allows the older one by its hash, so 1.0.1 keeps working)
+
 ## [1.0.1] - 2026-11-17
 
 - Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that

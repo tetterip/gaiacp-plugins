@@ -21,6 +21,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Vite;
 use Illuminate\Testing\TestResponse;
 use Livewire\Livewire;
 use Plugins\PiraeusBank\Paycenter;
@@ -145,12 +146,16 @@ class PiraeusBankPaymentsTest extends TestCase
                 && str_contains($body, '<MobilePhone>30-6912345678</MobilePhone>');
         });
 
-        $this->get('/piraeusbank/pay/'.$payment->reference)
+        $page = $this->get('/piraeusbank/pay/'.$payment->reference)
             ->assertOk()
             ->assertSee('action="'.Paycenter::PAY_URL.'"', false)
             ->assertSee('name="MerchantReference" value="'.$payment->reference.'"', false)
             ->assertSee('name="LanguageCode" value="en-US"', false)
             ->assertDontSee(self::TICKET);
+        // Under GaiaCP's Content-Security-Policy the submit script carries the page's nonce
+        if (filled($nonce = Vite::cspNonce())) {
+            $page->assertSee('<script nonce="'.$nonce.'">', false);
+        }
 
         // The module log never shows the password or the ticket
         $this->assertSame(1, ModuleLog::query()->where('module', 'piraeusbank')->count());

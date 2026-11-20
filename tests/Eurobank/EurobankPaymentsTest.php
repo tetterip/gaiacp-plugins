@@ -18,6 +18,7 @@ use Carbon\CarbonImmutable;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Vite;
 use Illuminate\Testing\TestResponse;
 use Livewire\Livewire;
 use Plugins\Eurobank\Cardlink;
@@ -174,10 +175,14 @@ class EurobankPaymentsTest extends TestCase
         $digest = array_pop($fields);
         $this->assertSame(Cardlink::sign($fields, self::SECRET), $digest);
 
-        $this->get('/eurobank/pay/'.$payment->reference)
+        $page = $this->get('/eurobank/pay/'.$payment->reference)
             ->assertOk()
             ->assertSee('action="'.Cardlink::TEST_URL.'"', false)
             ->assertSee('name="digest" value="'.e($digest).'"', false);
+        // Under GaiaCP's Content-Security-Policy the submit script carries the page's nonce
+        if (filled($nonce = Vite::cspNonce())) {
+            $page->assertSee('<script nonce="'.$nonce.'">', false);
+        }
 
         // Live mode posts to the live bank.
         config(['gaiacp.eurobank.mode' => 'live']);
