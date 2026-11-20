@@ -1,6 +1,6 @@
 {
     "format": 1,
-    "generated_at": "2026-11-17T20:56:28Z",
+    "generated_at": "2026-11-20T10:31:39Z",
     "plugins": [
         {
             "folder": "Aade",
@@ -55,6 +55,17 @@
             "licence": "GPL-3.0-or-later",
             "official": true,
             "versions": [
+                {
+                    "version": "1.0.2",
+                    "requires": "0.9.0",
+                    "php": "8.3",
+                    "released_at": "2026-11-20T10:31:39Z",
+                    "url": "zips/AlphaBank-1.0.2.zip",
+                    "sha256": "3b46fe46f7c976e7ce5fc1823e560c4f3c25dcbd528bac8dc21ff745b0001ca9",
+                    "size": 46491,
+                    "changelog": "- The script that sends the form to the bank carries the page's nonce, so it runs under GaiaCP's Content-Security-Policy\n  (GaiaCP allows the older one by its hash, so 1.0.1 keeps working)",
+                    "source": "dac307f10ba181a6e2d990dfff258fd1f5afe2fb6d2276aa396654a04d0f0a7e"
+                },
                 {
                     "version": "1.0.1",
                     "requires": "0.9.0",
@@ -153,6 +164,17 @@
             "licence": "GPL-3.0-or-later",
             "official": true,
             "versions": [
+                {
+                    "version": "1.0.2",
+                    "requires": "0.9.0",
+                    "php": "8.3",
+                    "released_at": "2026-11-20T10:31:39Z",
+                    "url": "zips/Eurobank-1.0.2.zip",
+                    "sha256": "dbc75b06733ad3d566fbd5286a2d828c405a0a9c0db4431cd2dcbcde7927924e",
+                    "size": 44796,
+                    "changelog": "- The script that sends the form to the bank carries the page's nonce, so it runs under GaiaCP's Content-Security-Policy\n  (GaiaCP allows the older one by its hash, so 1.0.1 keeps working)",
+                    "source": "f0cb0de8224828564ef190f4b484e56107afe563a29c86b8cda0a31ad54c3c58"
+                },
                 {
                     "version": "1.0.1",
                     "requires": "0.9.0",
@@ -389,6 +411,17 @@
             "licence": "GPL-3.0-or-later",
             "official": true,
             "versions": [
+                {
+                    "version": "1.0.2",
+                    "requires": "0.9.0",
+                    "php": "8.3",
+                    "released_at": "2026-11-20T10:31:39Z",
+                    "url": "zips/PiraeusBank-1.0.2.zip",
+                    "sha256": "28e9b36f5599974f51e5426be8831b874378f47342549cb2f86e90afebe16e11",
+                    "size": 50407,
+                    "changelog": "- The script that sends the form to the bank carries the page's nonce, so it runs under GaiaCP's Content-Security-Policy\n  (GaiaCP allows the older one by its hash, so 1.0.1 keeps working)",
+                    "source": "573844fd9e2e92a0bdc8acba2e85fc152d1fe5b670c287012689b5ed16de2c19"
+                },
                 {
                     "version": "1.0.1",
                     "requires": "0.9.0",
