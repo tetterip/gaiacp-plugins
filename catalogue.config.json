@@ -4,6 +4,7 @@
     "official": [
         "Aade",
         "AlphaBank",
+        "Discord",
         "EasyGr",
         "Enhance",
         "Eurobank",
@@ -13,7 +14,9 @@
         "Iris",
         "Kimi",
         "Ollama",
-        "PiraeusBank"
+        "PiraeusBank",
+        "Slack",
+        "Telegram"
     ],
     "bundled": [
         "BankTransfer",
@@ -25,7 +28,6 @@
         "DeepSeek",
         "Demo",
         "DirectAdmin",
-        "Discord",
         "EmailRegistrar",
         "Enom",
         "FlatTheme",
@@ -46,9 +48,7 @@
         "Recaptcha",
         "ResellerClub",
         "SiteChecks",
-        "Slack",
         "Stripe",
-        "Telegram",
         "TicketMail",
         "Turnstile",
         "UptimeKuma",
@@ -61,6 +61,7 @@
     "tags": {
         "Aade": ["greece", "tax"],
         "AlphaBank": ["greece", "cards"],
+        "Discord": ["chat"],
         "EasyGr": ["greece", "domains"],
         "Enhance": ["hosting"],
         "Eurobank": ["greece", "cards"],
@@ -70,6 +71,8 @@
         "Iris": ["greece", "bank-transfer"],
         "Kimi": ["ai"],
         "Ollama": ["ai"],
-        "PiraeusBank": ["greece", "cards", "bank-transfer"]
+        "PiraeusBank": ["greece", "cards", "bank-transfer"],
+        "Slack": ["chat"],
+        "Telegram": ["chat"]
     }
 }
