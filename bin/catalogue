@@ -29,9 +29,42 @@ const TAGS = [
 const MAX_TAGS = 6;
 const ROOT = __DIR__.'/..';
 
+/**
+ * Functions a plugin may not call (CONTRIBUTING.md, section 3): they run other programs or code, or hide code. A
+ * plugin that really needs one gets a reviewed exception in catalogue.config.json, "allowed_calls":
+ * {"Folder": {"function": "why"}}.
+ */
+const BANNED_CALLS = [
+    'exec' => 'runs a program on the server',
+    'shell_exec' => 'runs a program on the server',
+    'system' => 'runs a program on the server',
+    'passthru' => 'runs a program on the server',
+    'proc_open' => 'runs a program on the server',
+    'popen' => 'runs a program on the server',
+    'pcntl_exec' => 'runs a program on the server',
+    'pcntl_fork' => 'starts another process',
+    'assert' => 'can run a string as code',
+    'create_function' => 'runs a string as code',
+    'unserialize' => 'can build any object from data (use json_decode)',
+    'base64_decode' => 'often hides code',
+    'gzinflate' => 'often hides code',
+    'gzuncompress' => 'often hides code',
+    'gzdecode' => 'often hides code',
+    'str_rot13' => 'often hides code',
+    'dl' => 'loads a PHP extension',
+    'putenv' => "changes GaiaCP's environment",
+    'ini_set' => "changes GaiaCP's PHP settings",
+    'set_include_path' => "changes where GaiaCP's PHP loads files from",
+    'file_put_contents' => "writes files outside GaiaCP's storage (use Storage)",
+    'move_uploaded_file' => "writes files outside GaiaCP's storage (use Storage)",
+];
+
 final class Problem extends RuntimeException {}
 
-exit(main(array_slice($argv, 1)));
+// tests/catalogue/run.php loads the functions without running a command
+if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === realpath(__FILE__)) {
+    exit(main(array_slice($argv, 1)));
+}
 
 function main(array $args): int
 {
@@ -212,6 +245,13 @@ function inspect(string $folder): array
         } catch (ParseError $e) {
             throw new Problem("{$file} has a PHP error on line {$e->getLine()}: {$e->getMessage()}");
         }
+
+        $allowed = array_change_key_case(config()['allowed_calls'][$folder] ?? []);
+        foreach (scan((string) file_get_contents($path.'/'.$file)) as [$line, $name, $why]) {
+            if (! array_key_exists($name, $allowed)) {
+                throw new Problem("{$file} line {$line}: {$name} is not allowed in a plugin ({$why})");
+            }
+        }
     }
 
     $hash = hash_init('sha256');
@@ -262,6 +302,58 @@ function tags(string $folder, array $manifest): array
     }
 
     return $tags;
+}
+
+/**
+ * What a plugin's PHP file may not do: call a function of BANNED_CALLS (also named as a string, as in
+ * array_map('exec', ...)), eval, run a shell command in backticks, or include a file whose path is not fixed
+ * (__DIR__ and texts only). It reads tokens, so comments, texts and method names like $client->exec() don't count.
+ *
+ * @return list<array{int, string, string}> line, what, why
+ */
+function scan(string $code): array
+{
+    $tokens = array_values(array_filter(
+        PhpToken::tokenize($code),
+        fn (PhpToken $token) => ! $token->is([T_WHITESPACE, T_COMMENT, T_DOC_COMMENT]),
+    ));
+    $found = [];
+    $inBackticks = false;
+
+    foreach ($tokens as $i => $token) {
+        $before = $tokens[$i - 1] ?? null;
+        $after = $tokens[$i + 1] ?? null;
+
+        if ($token->is(T_EVAL)) {
+            $found[] = [$token->line, 'eval', 'runs a string as code'];
+        } elseif ($token->text === '`') {
+            if ($inBackticks = ! $inBackticks) {
+                $found[] = [$token->line, 'backticks', 'run a program on the server'];
+            }
+        } elseif ($token->is([T_STRING, T_NAME_FULLY_QUALIFIED])) {
+            $name = strtolower(ltrim($token->text, '\\'));
+            $call = $after?->text === '('
+                && ! $before?->is([T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR, T_DOUBLE_COLON, T_FUNCTION, T_NEW, T_CONST]);
+
+            if ($call && isset(BANNED_CALLS[$name])) {
+                $found[] = [$token->line, $name, BANNED_CALLS[$name]];
+            }
+        } elseif ($token->is(T_CONSTANT_ENCAPSED_STRING)) {
+            $name = strtolower(ltrim(substr($token->text, 1, -1), '\\'));
+            if (isset(BANNED_CALLS[$name])) {
+                $found[] = [$token->line, $name, BANNED_CALLS[$name]];
+            }
+        } elseif ($token->is([T_INCLUDE, T_INCLUDE_ONCE, T_REQUIRE, T_REQUIRE_ONCE])) {
+            for ($j = $i + 1; isset($tokens[$j]) && ! in_array($tokens[$j]->text, [';', '?>'], true); $j++) {
+                if (! $tokens[$j]->is([T_DIR, T_CONSTANT_ENCAPSED_STRING]) && ! in_array($tokens[$j]->text, ['.', '(', ')'], true)) {
+                    $found[] = [$token->line, strtolower($token->text), 'its path must be fixed: __DIR__ and texts only'];
+                    break;
+                }
+            }
+        }
+    }
+
+    return $found;
 }
 
 /** @return list<string> the folder's files, relative, sorted; dot files left out; a symbolic link refused */

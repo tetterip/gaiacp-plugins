@@ -18,4 +18,5 @@ jobs:
           php-version: '8.3'
           extensions: zip, sodium
           tools: none
+      - run: php tests/catalogue/run.php
       - run: php bin/catalogue check
