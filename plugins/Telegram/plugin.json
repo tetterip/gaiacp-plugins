@@ -1,0 +1,17 @@
+{
+    "version": "1.0.6",
+    "requires": "0.1.0",
+    "class": "Plugins\\Telegram\\TelegramPlugin",
+    "name": "Telegram",
+    "description": {
+        "en": "A Telegram bot for admins: GaiaCP's events (new orders, payments, tickets, servers down) in a chat, and answers to /owed, /today, /tickets and /servers.",
+        "el": "Ένα Telegram bot για admins: τα events του GaiaCP (νέες παραγγελίες, πληρωμές, tickets, servers εκτός λειτουργίας) σε μια συνομιλία, και απαντήσεις στα /owed, /today, /tickets και /servers."
+    },
+    "category": "Integrations",
+    "author": {
+        "name": "GaiaCP",
+        "url": "https://gaiacp.digital"
+    },
+    "licence": "GPL-3.0-or-later",
+    "php": "8.3"
+}

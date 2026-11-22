@@ -1,0 +1,17 @@
+{
+    "version": "1.0.3",
+    "requires": "0.1.0",
+    "class": "Plugins\\Discord\\DiscordPlugin",
+    "name": "Discord",
+    "description": {
+        "en": "Posts GaiaCP's events (new orders, payments, tickets, servers down) to a Discord channel.",
+        "el": "Δημοσιεύει τα events του GaiaCP (νέες παραγγελίες, πληρωμές, tickets, servers εκτός λειτουργίας) σε κανάλι του Discord."
+    },
+    "category": "Integrations",
+    "author": {
+        "name": "GaiaCP",
+        "url": "https://gaiacp.digital"
+    },
+    "licence": "GPL-3.0-or-later",
+    "php": "8.3"
+}
