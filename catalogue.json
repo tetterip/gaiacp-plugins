@@ -1,6 +1,6 @@
 {
     "format": 1,
-    "generated_at": "2026-11-20T12:49:35Z",
+    "generated_at": "2026-11-22T12:51:55Z",
     "plugins": [
         {
             "folder": "Aade",
@@ -76,6 +76,38 @@
                     "size": 46292,
                     "changelog": "- Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that\n  had it keeps it, with its settings and payments, and updates it from the catalogue from now on. No change to\n  how it works.",
                     "source": "62dc6af104a2e9443564e0ab9f62d07dd0b2e44835485e113f0f93279a8d9c8c"
+                }
+            ]
+        },
+        {
+            "folder": "Discord",
+            "class": "Plugins\\Discord\\DiscordPlugin",
+            "name": "Discord",
+            "description": {
+                "en": "Posts GaiaCP's events (new orders, payments, tickets, servers down) to a Discord channel.",
+                "el": "Δημοσιεύει τα events του GaiaCP (νέες παραγγελίες, πληρωμές, tickets, servers εκτός λειτουργίας) σε κανάλι του Discord."
+            },
+            "category": "Integrations",
+            "author": {
+                "name": "GaiaCP",
+                "url": "https://gaiacp.digital"
+            },
+            "tags": [
+                "chat"
+            ],
+            "licence": "GPL-3.0-or-later",
+            "official": true,
+            "versions": [
+                {
+                    "version": "1.0.3",
+                    "requires": "0.1.0",
+                    "php": "8.3",
+                    "released_at": "2026-11-22T12:51:55Z",
+                    "url": "zips/Discord-1.0.3.zip",
+                    "sha256": "9510908b897c71edaf22cb9034d5ae01b6ad075fccddcd432b2efc8cd5075de7",
+                    "size": 7434,
+                    "changelog": "- Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that\n  had it keeps it, with its settings and data, and updates it from the catalogue from now on. No change to how it\n  works.",
+                    "source": "2961880412ccf2d22cf44e00a13cce81ffda57cf81b88f39e92c20b1aa42ef65"
                 }
             ]
         },
@@ -442,6 +474,70 @@
                     "size": 50205,
                     "changelog": "- Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that\n  had it keeps it, with its settings and payments, and updates it from the catalogue from now on. No change to\n  how it works.",
                     "source": "6dc41be19df79214d3fbf8e3bd1c3fe8a9f0d64bfcdc2af77745223d05721a0c"
+                }
+            ]
+        },
+        {
+            "folder": "Slack",
+            "class": "Plugins\\Slack\\SlackPlugin",
+            "name": "Slack",
+            "description": {
+                "en": "Posts GaiaCP's events (new orders, payments, tickets, servers down) to a Slack channel.",
+                "el": "Δημοσιεύει τα events του GaiaCP (νέες παραγγελίες, πληρωμές, tickets, servers εκτός λειτουργίας) σε κανάλι του Slack."
+            },
+            "category": "Integrations",
+            "author": {
+                "name": "GaiaCP",
+                "url": "https://gaiacp.digital"
+            },
+            "tags": [
+                "chat"
+            ],
+            "licence": "GPL-3.0-or-later",
+            "official": true,
+            "versions": [
+                {
+                    "version": "1.0.3",
+                    "requires": "0.1.0",
+                    "php": "8.3",
+                    "released_at": "2026-11-22T12:51:55Z",
+                    "url": "zips/Slack-1.0.3.zip",
+                    "sha256": "311c276ac88ca72f21b0d167e8f242de665fe7c07ae910b24bbd7d5adde8cf3f",
+                    "size": 7458,
+                    "changelog": "- Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that\n  had it keeps it, with its settings and data, and updates it from the catalogue from now on. No change to how it\n  works.",
+                    "source": "a229e15d589665e631cd456e784aaf14e170471acb9b8272159c833fbda9aad7"
+                }
+            ]
+        },
+        {
+            "folder": "Telegram",
+            "class": "Plugins\\Telegram\\TelegramPlugin",
+            "name": "Telegram",
+            "description": {
+                "en": "A Telegram bot for admins: GaiaCP's events (new orders, payments, tickets, servers down) in a chat, and answers to /owed, /today, /tickets and /servers.",
+                "el": "Ένα Telegram bot για admins: τα events του GaiaCP (νέες παραγγελίες, πληρωμές, tickets, servers εκτός λειτουργίας) σε μια συνομιλία, και απαντήσεις στα /owed, /today, /tickets και /servers."
+            },
+            "category": "Integrations",
+            "author": {
+                "name": "GaiaCP",
+                "url": "https://gaiacp.digital"
+            },
+            "tags": [
+                "chat"
+            ],
+            "licence": "GPL-3.0-or-later",
+            "official": true,
+            "versions": [
+                {
+                    "version": "1.0.6",
+                    "requires": "0.1.0",
+                    "php": "8.3",
+                    "released_at": "2026-11-22T12:51:55Z",
+                    "url": "zips/Telegram-1.0.6.zip",
+                    "sha256": "468bba89367552b077886a5825060856b432b603477227f9085da4c84b107f8c",
+                    "size": 26015,
+                    "changelog": "- Moved out of GaiaCP into the plugin catalogue: install it under Settings → System → Plugin catalogue. An install that\n  had it keeps it, with its settings and data, and updates it from the catalogue from now on. No change to how it\n  works.",
+                    "source": "00cdbf0210da3001a93843d0bb90dabab9d48538dd7ce0fe6df7b0c3fc4c649d"
                 }
             ]
         }
