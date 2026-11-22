@@ -55,6 +55,12 @@ A plugin is listed when:
 - It sends data only to the service the admin set it up for, and only what that service needs. No tracking, no
   "phone home", no ads.
 - It loads no code from outside its folder (no downloading and running scripts, no `eval`).
+- It runs no programs or hidden code. `php bin/catalogue check` refuses `eval`, backticks, `exec`, `shell_exec`,
+  `system`, `passthru`, `proc_open`, `popen`, `assert`, `unserialize` (use `json_decode`), `base64_decode`,
+  `gzinflate`, `str_rot13`, `file_put_contents` (use Laravel's `Storage`), `ini_set`, `putenv` and the rest of
+  `BANNED_CALLS` in `bin/catalogue`, and an `include` / `require` whose path is not fixed (`__DIR__` and texts only).
+  If your plugin really needs one, say why in the pull request: the maintainer may allow it for your plugin in
+  `catalogue.config.json` (`allowed_calls`).
 - Passwords and API keys are stored encrypted (`encryptedSettingKeys()`), never logged in plain text, and never sent
   back to the browser.
 - API calls go through `ModuleLogger::middleware()`, so the admin can see them in the Module log.
